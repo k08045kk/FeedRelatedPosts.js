@@ -4,8 +4,8 @@
  * Bloggerに関連記事を設置します。
  * 関連記事は、投稿のタイトルとラベルを元に作成します。
  * 関連記事の関連度は、タイトル文字列のtrigram一致度で判定します。
- * 別記する#related-posts-json要素から、作成する設定JSONを元に関連記事を配置します。
- * 別記する#related-posts-data-json要素から、関連記事内容を事前に指定することもできます。
+ * ソース下部に別記する#related-posts-json要素から、作成する設定JSONを元に関連記事を配置します。
+ * ソース下部に別記する#related-posts-data-json要素から、関連記事内容を事前に指定することもできます。
  * 本スクリプトの読込み（実行）は、#related-posts-json要素より後で実施します。
  * そのため、使用方法として次の３つが考えられます。
  * + #related-posts-json要素より後に<script>を配置する
@@ -42,6 +42,7 @@
   };
   
   // HTML特殊文字変換
+  // see https://www.bugbugnow.net/2020/02/HTML-special-character-converter.html
   const converter = (function() {
     const map = {'&nbsp;':' ','&lt;':'<','&gt;':'>','&amp;':'&','&quot;':'"','&apos;':"'",'&copy;':'©'};
     return function(src) {
@@ -202,23 +203,24 @@
     }
     
     if (_this._data.pageMap.size < _this._data.max) {
-      const feed = 'feeds/posts/summary/-/';
+      const feed = _this._data.homepageUrl+'feeds/posts/summary/-/';
       const params = '?alt=json-in-script&callback=BloggerRelatedPosts.add'
                    + (_this._data.params ? '&'+_this._data.params : '');
+      const isMaxResults = _this._data.params && _this._data.params.indexOf('max-results=') >= 0;
       if (_this._data.limit == 0) {
         // ラベルなし（処理終了）
       } else if (_this._data.limit == 1) {
-        loadScript(_this._data.homepageUrl+feed+_this._data.labels[0]+params+'&max-results=100');
+        loadScript(feed+_this._data.labels[0]+params+(isMaxResults ? '' : '&max-results=100'));
       } else if (_this._data.limit == 2) {
-        loadScript(_this._data.homepageUrl+feed+_this._data.labels[0]+params+'&max-results=50');
-        loadScript(_this._data.homepageUrl+feed+_this._data.labels[1]+params+'&max-results=50');
+        loadScript(feed+_this._data.labels[0]+params+(isMaxResults ? '' : '&max-results=50'));
+        loadScript(feed+_this._data.labels[1]+params+(isMaxResults ? '' : '&max-results=50'));
       } else {
         for (let i=0; i<_this._data.limit; i++) {
           // max-results=25(default)
-          loadScript(_this._data.homepageUrl+feed+_this._data.labels[i]+params)
+          loadScript(feed+_this._data.labels[i]+params)
         }
       }
-      // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json
+      // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json-in-script
       // 補足：homepageUrlは、プレビュー画面動作用です
       // 補足：ラベルの複数指定方法もある（.../-/label1/label2?...）
       //       ただし、AND検索である（現状使いみちが思いつかなかったため、使用しない）
@@ -237,8 +239,8 @@
 // 関連記事の設定
 // 下記の<script>をBlogウィジェット内に設定してください。
 // JSON内容を変更することで、関連記事の出力を制御することができます。
-// 補足：JSONではコメントが使用できないため、コメントを削除して使用してください
 // 補足：url, title, labels は、必須項目です
+// 補足：JSONではコメントが使用できないため、コメントを削除して使用してください
 <script type='application/json' id='related-posts-json'>
 {
   "debug": false,                               // デバッグモード（default=false）
@@ -247,13 +249,13 @@
   "url": "<data:post.url/>",                    // 関連記事の設置投稿のURL
   "title": "<data:post.title.jsonEscaped/>",    // 関連記事の設置投稿のタイトル
   "snippet": "<data:post.snippet.jsonEscaped/>",// 関連記事の設置投稿のスニペット（default=''）
-       // or "<data:post.snippets.short.jsonEscaped/>"
+       // or "<data:post.snippets.short.jsonEscaped/>"  // widget version 1 or 2
   "useSnippet": true,                           // snippetを使用する（関連度上昇目的）（default=false）
   "useSummary": false,                          // summaryを使用する（関連度上昇目的）（default=false）
   "min": 1,                                     // 関連記事の最小数（未満は表示しない）（default=1）
   "max": 5,                                     // 関連記事の最大数（関連度上位表示する）（default=5）
   "insertPositionId": "related-posts-json",     // 挿入位置のID（指定要素の直後に挿入する）（default='related-posts-json'）
-  "prefix": "<div><h2>Related Posts</h2><ul>",  // 関連記事HTMLの接頭辞（default=''）
+  "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>", // 関連記事HTMLの接頭辞（default=''）
   "format": "<li><a href='${url}'>${title}</a></li>", // 関連記事HTMLの書式（${url}, ${title}を置換る）（default=''）
   "sufix": "</ul></div>",                       // 関連記事HTMLの接尾辞（default=''）
   "labels": [<b:loop values='data:post.labels' var='label' index='i'><b:if cond='data:i != 0'>,</b:if>"<data:label.name.jsonEscaped/>"</b:loop>]
@@ -262,9 +264,10 @@
 </script>
 
 // 事前指定の関連記事設定
+// 下記の<script>を投稿内に設定してください。
 // 最大数(max)以上設定している場合、配列の先頭から順に最大数分表示します。
 // 最大数(max)未満設定している場合、配列の先頭から順に表示し、それ以降を関連度順に表示します。
-// related-posts-data-jsonの設定がページ内に存在しない場合、関連度順に表示します。
+// #related-posts-data-jsonの設定がページ内に存在しない場合、関連度順に表示します。
 // <script>の記載が難しい場合、<div hidden>などで対応できないか検討ください。
 // 補足：url, title は、必須項目です
 // 補足：visible は、 default=true です
