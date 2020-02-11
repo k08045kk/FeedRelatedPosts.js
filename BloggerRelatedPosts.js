@@ -2,16 +2,15 @@
 /**
  * BloggerRelatedPosts.js
  * Bloggerに関連記事を設置します。
- * 関連度の算出は、タイトル文字列のtrigramの一致度で判定します。
- * 別記する`id=related-posts-json`の要素から、
- * 作成する設定JSONを元に関連記事をJSON要素の直後に配置します。
- * 別記する`id=related-posts-data-json`を指定することで、
- * 事前に関連記事内容を指定することもできます。
- * 本スクリプトの読込み（実行）は、`id=related-posts-json`要素より後で実施してください。
+ * 関連記事は、投稿のタイトルとラベルを元に作成します。
+ * 関連記事の関連度は、タイトル文字列のtrigram一致度で判定します。
+ * 別記する#related-posts-json要素から、作成する設定JSONを元に関連記事を配置します。
+ * 別記する#related-posts-data-json要素から、関連記事内容を事前に指定することもできます。
+ * 本スクリプトの読込み（実行）は、#related-posts-json要素より後で実施します。
  * そのため、使用方法として次の３つが考えられます。
- * + `id=related-posts-json`要素より後に<script>を配置する
+ * + #related-posts-json要素より後に<script>を配置する
+ * + #related-posts-json要素より後に<script async="1">で読み込む
  * + <script defer="1">で読込む
- * + `id=related-posts-json`要素より後に<script async="1">で読み込む
  * 対応：IE11+
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * @auther      toshi (https://github.com/k08045kk)
@@ -238,7 +237,7 @@
 // 関連記事の設定
 // 下記の<script>をBlogウィジェット内に設定してください。
 // JSON内容を変更することで、関連記事の出力を制御することができます。
-// 補足：JSONではコメントが使用できないので削除して使用してください
+// 補足：JSONではコメントが使用できないため、コメントを削除して使用してください
 // 補足：url, title, labels は、必須項目です
 <script type='application/json' id='related-posts-json'>
 {
