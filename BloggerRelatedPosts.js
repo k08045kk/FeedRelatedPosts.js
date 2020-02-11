@@ -62,7 +62,7 @@
             text = text + map[m[0]];
           } else {
             // 未定義文字実体参照（諦める）
-            //text = text + m[0];
+            text = text + m[0];
           }
         } else {
           // 通常文字列
