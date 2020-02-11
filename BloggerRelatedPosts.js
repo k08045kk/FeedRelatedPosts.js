@@ -11,7 +11,7 @@
  * + #related-posts-json要素より後に<script>を配置する
  * + #related-posts-json要素より後に<script async="1">で読み込む
  * + <script defer="1">で読込む
- * 対応：IE11+
+ * 対応：IE11+（Set/Mapがボトルネック）
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * @auther      toshi (https://github.com/k08045kk)
  * @version     1
@@ -110,11 +110,12 @@
       const lines = [];
       for (let i=0; i<max; i++) {
         lines.push(data.format.replace(/\${url}/ig, pages[i].url)
-                                     .replace(/\${title}/ig, pages[i].title)
-                                     .replace(/\${thumbnail}/ig, pages[i].thumbnail || ''));
+                              .replace(/\${title}/ig, pages[i].title)
+                              .replace(/\${thumbnail}/ig, pages[i].thumbnail || ''));
       }
       const html = (data.prefix || '') + lines.join('') + (data.sufix || '');
       
+      // 指定要素の直後に挿入
       const id = data.insertPositionId || 'related-posts-json';
       document.getElementById(id).insertAdjacentHTML('afterend', html);
     }
@@ -186,8 +187,6 @@
     // 事前指定の関連記事
     const element = document.getElementById('related-posts-data-json');
     if (element) {
-      // 例：json = [{url:'...', title:'...', thumbnail:'...'},...]
-      // thumbnail は任意
       try {
         const json = JSON.parse(element.textContent);
         for (let j=0; j<json.length; j++) {
