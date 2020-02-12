@@ -18,6 +18,7 @@
  * @see         1.20200211 - add - 初版
  * @see         1.20200212 - update - engramify（英語分割）に対応
  * @see         1.20200213 - update - insertPositionId を Query に変更、自由度向上のため
+ * @see         1.20200213 - update - htmlscd(), engramify() を最適化
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -45,49 +46,37 @@
   
   // HTML特殊文字変換
   // see https://www.bugbugnow.net/2020/02/HTML-special-character-converter.html
-  const htmlscc = (function() {
-    const map = {'&nbsp;':' ','&lt;':'<','&gt;':'>','&amp;':'&','&quot;':'"','&apos;':"'",'&copy;':'©'};
-    return function(src) {
-      const re = /&#(\d+);|&\w+;|[^&]+|&/g;
-      let text = '';
-      let m;
-      while ((m=re.exec(src)) !== null) {
-        if (m[0].charAt(0) == '&') {
-          if (m[0].length == 1) {
-            // 構文エラー（エラー終了でも可）
-            text = text + m[0];
-          } else if (m[0].charAt(1) == '#') {
-            // 数値文字参照
-            text = text + String.fromCharCode(m[1]-0);
-          } else if (map.hasOwnProperty(m[0])) {
-            // 定義済み文字実体参照
-            text = text + map[m[0]];
-          } else {
-            // 未定義文字実体参照（諦める）
-            text = text + m[0];
-          }
-        } else {
-          // 通常文字列
-          text = text + m[0];
+  const htmlscd = (function() {
+    const re = /&#(\d+);|&\w+;/g;
+    const map = {'&nbsp;':' ','&lt;':'<','&gt;':'>','&amp;':'&','&quot;':'"','&apos;':"'"};  //'
+    return function(text) {
+      return text.replace(re, function(match, p1) {
+        if (match.charAt(1) == '#') {
+          // 数値文字参照
+          return String.fromCharCode(p1-0);
+        } else if (map.hasOwnProperty(match)) {
+          // 定義済み文字実体参照
+          return map[match];
         }
-      }
-      return text;
+        return match;
+      });
     };
   })();
   
   // 英語（半角スペース区切り文字）を分割する
   // see https://www.bugbugnow.net/2020/02/English-simple-separation.html
   const engramify = function(text, set) {
+    text = text.toLowerCase();
     set = set || new Set();
-    //const re = /[A-Za-z0-9]+|'[A-Za-z0-9]*|"|!|\?|-|:|;|,|\.|[^A-Za-z0-9'"!\?\-:;,\.\s]+/g;
-    const re = /[A-Za-z0-9]+|'[A-Za-z0-9]*|[^A-Za-z0-9'"!\?\-:;,\.\s]+/g;
+    //const re = /[A-Z]+[a-z]*|[A-Z]*[a-z]+|'[A-Z]*[a-z]*|[0-9]+|"|!|\?|-|:|;|,|\.|[^A-Za-z0-9'"!\?\-:;,\.\s]+/g;
+    const re = /[a-z]+|'[a-z]*|[0-9]+|[^a-z0-9'"!\?\-:;,\.\s]+/g;
     let m;
     while ((m=re.exec(text)) !== null) {
       set.add(m[0]);
     }
     return set;
     // engramify("It's a gift for Mr. 太郎. 太郎さんへのgiftです。");
-    // ["It", "'s", "a", "gift", "for", "Mr", "太郎", "太郎さんへの", "です。"]
+    // [ "it", "'s", "a", "gift", "for", "mr", "太郎", "太郎さんへの", "です。" ]
   };
   
   // 3文字づつに分解する
@@ -200,7 +189,7 @@
     
     // スニペットを追加設定
     if (_this._data.useSnippet === true && _this._data.snippet) {
-      _this._data.snippet = htmlscc(_this._data.snippet);
+      _this._data.snippet = htmlscd(_this._data.snippet);
       _this._data.gramify(_this._data.snippet, _this._data.set);
     }
     
