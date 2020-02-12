@@ -1,4 +1,4 @@
-/*! BloggerRelatedPosts.js v1.0 | MIT License | https://github.com/k08045kk/BloggerRelatedPosts.js/blob/master/LICENSE */
+/*! BloggerRelatedPosts.js v1 | MIT License | https://github.com/k08045kk/BloggerRelatedPosts.js/blob/master/LICENSE */
 /**
  * BloggerRelatedPosts.js
  * Bloggerに関連記事を設置します。
@@ -16,6 +16,7 @@
  * @auther      toshi (https://github.com/k08045kk)
  * @version     1
  * @see         1.20200211 - add - 初版
+ * @see         1.20200212 - update - engramify（英語分割）に対応
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -72,6 +73,21 @@
       return text;
     };
   })();
+  
+  // 英語（半角スペース区切り文字）を分割する
+  // see https://www.bugbugnow.net/2020/02/English-simple-separation.html
+  const engramify = function(text, set) {
+    set = set || new Set();
+    //const re = /[A-Za-z0-9]+|'[A-Za-z0-9]*|"|!|\?|-|:|;|,|\.|[^A-Za-z0-9'"!\?\-:;,\.\s]+/g;
+    const re = /[A-Za-z0-9]+|'[A-Za-z0-9]*|[^A-Za-z0-9'"!\?\-:;,\.\s]+/g;
+    let m;
+    while ((m=re.exec(text)) !== null) {
+      set.add(m[0]);
+    }
+    return set;
+    // engramify("It's a gift for Mr. 太郎. 太郎さんへのgiftです。");
+    // ["It", "'s", "a", "gift", "for", "Mr", "太郎", "太郎さんへの", "です。"]
+  };
   
   // 3文字づつに分解する
   const trigramify = function(text, set) {
@@ -135,9 +151,9 @@
         for (let k=0; k<entry.link.length; k++) {
           if (entry.link[k].rel == 'alternate') {
             if (_this._data.url != entry.link[k].href && !_this._data.pageMap.has(entry.link[k].href)) {
-              const set = trigramify(entry.link[k].title);
+              const set = _this._data.gramify(entry.link[k].title);
               if (_this._data.useSummary === true && entry.summary && entry.summary.$t) {
-                trigramify(entry.summary.$t, set);
+                _this._data.gramify(entry.summary.$t, set);
               }
               _this._data.pageMap.set(entry.link[k].href, {
                 //set: set,
@@ -166,7 +182,6 @@
   _this.init = function(obj) {
     _this._data = obj;
     _this._data.url = _this._data.url.split('?')[0];
-    _this._data.set = trigramify(_this._data.title);
     _this._data.count = 0;
     _this._data.limit = _this._data.labels.length;
     _this._data.pageMap = new Map();
@@ -178,10 +193,14 @@
       _this._data.homepageUrl = m[1]+'://'+m[2]+(m[3] ? ':'+m[3] : '')+'/';
     }
     
+    // セット作成
+    _this._data.gramify = _this._data.useSetType == 'engramify' ? engramify : trigramify;
+    _this._data.set = _this._data.gramify(_this._data.title);
+    
     // スニペットを追加設定
     if (_this._data.useSnippet === true && _this._data.snippet) {
       _this._data.snippet = converter(_this._data.snippet);
-      trigramify(_this._data.snippet, _this._data.set);
+      _this._data.gramify(_this._data.snippet, _this._data.set);
     }
     
     // 事前指定の関連記事
@@ -229,9 +248,7 @@
   };
   
   return _this;
-  // 補足：フィード読込みとフィード解析の変更で、Blogger以外の対応も可能です
-  // 補足：アルファベット環境では、trigramよりも1単語の形態素解析を利用したngramが有効だと思われる
-  //       簡易形態素解析コードが実現できれば、対応する
+  // 補足：フィード読込みとフィード解析の変更で、Blogger以外にも対応も可能です
 });
 
 /*
@@ -251,6 +268,8 @@
        // or "<data:post.snippets.short.jsonEscaped/>"  // widget version 1 or 2
   "useSnippet": true,                           // snippetを使用する（関連度上昇目的）（default=false）
   "useSummary": false,                          // summaryを使用する（関連度上昇目的）（default=false）
+  "gramify": "trigramify",                      // 文字列分割方式（default='trigramify'）
+       // or "engramify"  // 3文字分割（日本語環境用） or 英単語分割（英語環境用）
   "min": 1,                                     // 関連記事の最小数（未満は表示しない）（default=1）
   "max": 5,                                     // 関連記事の最大数（関連度上位表示する）（default=5）
   "insertPositionId": "related-posts-json",     // 挿入位置のID（指定要素の直後に挿入する）（default='related-posts-json'）
