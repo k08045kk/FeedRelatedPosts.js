@@ -44,7 +44,7 @@
   
   // HTML特殊文字変換
   // see https://www.bugbugnow.net/2020/02/HTML-special-character-converter.html
-  const converter = (function() {
+  const htmlscc = (function() {
     const map = {'&nbsp;':' ','&lt;':'<','&gt;':'>','&amp;':'&','&quot;':'"','&apos;':"'",'&copy;':'©'};
     return function(src) {
       const re = /&#(\d+);|&\w+;|[^&]+|&/g;
@@ -199,7 +199,7 @@
     
     // スニペットを追加設定
     if (_this._data.useSnippet === true && _this._data.snippet) {
-      _this._data.snippet = converter(_this._data.snippet);
+      _this._data.snippet = htmlscc(_this._data.snippet);
       _this._data.gramify(_this._data.snippet, _this._data.set);
     }
     
