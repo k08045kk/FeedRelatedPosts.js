@@ -17,6 +17,7 @@
  * @version     1
  * @see         1.20200211 - add - 初版
  * @see         1.20200212 - update - engramify（英語分割）に対応
+ * @see         1.20200213 - update - insertPositionId を Query に変更、自由度向上のため
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -132,8 +133,8 @@
       const html = (data.prefix || '') + lines.join('') + (data.sufix || '');
       
       // 指定要素の直後に挿入
-      const id = data.insertPositionId || 'related-posts-json';
-      document.getElementById(id).insertAdjacentHTML('afterend', html);
+      const query = data.insertPositionQuery || '#related-posts-json';
+      document.querySelector(query).insertAdjacentHTML('afterend', html);
     }
     
     if (data.debug !== true) {
@@ -272,7 +273,7 @@
        // or "engramify"  // 3文字分割（日本語環境用） or 英単語分割（英語環境用）
   "min": 1,                                     // 関連記事の最小数（未満は表示しない）（default=1）
   "max": 5,                                     // 関連記事の最大数（関連度上位表示する）（default=5）
-  "insertPositionId": "related-posts-json",     // 挿入位置のID（指定要素の直後に挿入する）（default='related-posts-json'）
+  "insertPositionQuery": "#related-posts-json", // 挿入位置のID（指定要素の直後に挿入する）（default='#related-posts-json'）
   "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>", // 関連記事HTMLの接頭辞（default=''）
   "format": "<li><a href='${url}'>${title}</a></li>", // 関連記事HTMLの書式（${url}, ${title}を置換る）（default=''）
   "sufix": "</ul></div>",                       // 関連記事HTMLの接尾辞（default=''）
