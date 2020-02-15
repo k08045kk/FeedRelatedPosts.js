@@ -4,13 +4,13 @@
  * Bloggerに関連記事を設置します。
  * 関連記事は、投稿のタイトルとラベルを元に作成します。
  * 関連記事の関連度は、タイトル文字列のtrigram一致度で判定します。
- * ソース下部に別記する#related-posts-json要素から、作成する設定JSONを元に関連記事を配置します。
- * ソース下部に別記する#related-posts-data-json要素から、関連記事内容を事前に指定することもできます。
- * 本スクリプトの読込み（実行）は、#related-posts-json要素より後で実施します。
- * そのため、使用方法として次の３つが考えられます。
- * + #related-posts-json要素より後に<script>を配置する
- * + #related-posts-json要素より後に<script async="1">で読み込む
- * + <script defer="1">で読込む
+ * ソース下部に別記するサイトの関連記事設定、ページの関連記事設定を元に関連記事を配置します。
+ * サイトの関連記事設定をページの関連記事設定で上書きして利用します。（pagesのみ末尾追加します）
+ * 本スクリプトの読込み（実行）は、関連記事設定より後に実行して下さい。
+ * 使用方法として次の３つが考えられます。
+ * + 関連記事設定より後に`script`を配置する
+ * + 関連記事設定より後に`script async="1"`で読み込む
+ * + `script defer="1"`で読み込む
  * 対応：IE11+（Set/Mapがボトルネック）
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * @auther      toshi (https://github.com/k08045kk)
@@ -19,15 +19,41 @@
  * @see         1.20200212 - update - engramify（英語分割）に対応
  * @see         1.20200213 - update - insertPositionId を Query に変更、自由度向上のため
  * @see         1.20200213 - update - htmlscd(), engramify() を最適化
+ * @see         1.20200213 - update - 関連記事設定の構造を変更
+ * @see         1.20200213 - update - ${score}, ${$} を出力
+ * @see         1.20200213 - fix - 事前指定時にm=1のURLと重複することがある
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
-    const document = root.document;
-    const element = document.getElementById('related-posts-json');
-    if (element) {
-      root.BloggerRelatedPosts = factory(document);
-      root.BloggerRelatedPosts.init(JSON.parse(element.textContent));
+    const data = {};//window.BloggerRelatedPosts && window.BloggerRelatedPosts._data || {};
+    const query1 = data.siteJsonQuery || '#related-posts-site-json';
+    const element1 = document.querySelector(query1);
+    const data1 = element1 && JSON.parse(element1.textContent) || {};
+    const query2 = data1.pageJsonQuery || '#related-posts-page-json';
+    const element2 = document.querySelector(query2);
+    
+    // 設定JSON作成（pagesのみ末尾追加）
+    let data2 = {};
+    try {
+      data2 = element2 && JSON.parse(element2.textContent) || {};
+    } catch (e) {}
+    const pages = data.pages || [];
+    Array.prototype.push.apply(pages, data1.pages || []);
+    Array.prototype.push.apply(pages, data2.pages || []);
+    for (const key in data1) {
+      if (data1.hasOwnProperty(key)) {
+        data[key] = data1[key];
+      }
     }
+    for (const key in data2) {
+      if (data2.hasOwnProperty(key)) {
+        data[key] = data2[key];
+      }
+    }
+    data.pages = pages;
+    
+    root.BloggerRelatedPosts = factory(document);
+    root.BloggerRelatedPosts.init(data);
   }
 })(this, function(document) {
   "use strict";
@@ -117,12 +143,16 @@
       for (let i=0; i<max; i++) {
         lines.push(data.format.replace(/\${url}/ig, pages[i].url)
                               .replace(/\${title}/ig, pages[i].title)
-                              .replace(/\${thumbnail}/ig, pages[i].thumbnail || ''));
+                              //.replace(/\${summary}/ig, pages[i].summary)
+                              //.replace(/\${set}/ig, [...pages[i].set].join(' | '))
+                              .replace(/\${thumbnail}/ig, pages[i].thumbnail || '')
+                              .replace(/\${score}/ig, pages[i].score)
+                              .replace(/\${\$}/ig, '$'));
       }
       const html = (data.prefix || '') + lines.join('') + (data.sufix || '');
       
       // 指定要素の直後に挿入
-      const query = data.insertPositionQuery || '#related-posts-json';
+      const query = data.insertPositionQuery || '#related-posts-site-json';
       document.querySelector(query).insertAdjacentHTML('afterend', html);
     }
     
@@ -134,24 +164,25 @@
   
   // フィードの要素を追加する
   _this.add = function(json) {
-    if (_this._data.pageMap) {
+    const data = _this._data;
+    if (data.pageMap) {
       // フィード解析処理
       for (let i=0; i<json.feed.entry.length; i++) {
         let entry = json.feed.entry[i];
         for (let k=0; k<entry.link.length; k++) {
           if (entry.link[k].rel == 'alternate') {
-            if (_this._data.url != entry.link[k].href && !_this._data.pageMap.has(entry.link[k].href)) {
-              const set = _this._data.gramify(entry.link[k].title);
-              if (_this._data.useSummary === true && entry.summary && entry.summary.$t) {
-                _this._data.gramify(entry.summary.$t, set);
+            if (data.url != entry.link[k].href && !data.pageMap.has(entry.link[k].href)) {
+              const set = data.gramify(entry.link[k].title);
+              if (data.useSummary === true && entry.summary && entry.summary.$t) {
+                data.gramify(entry.summary.$t, set);
               }
-              _this._data.pageMap.set(entry.link[k].href, {
-                //set: set,
+              data.pageMap.set(entry.link[k].href.split('?')[0], {
                 url: entry.link[k].href,
                 title: entry.link[k].title, 
                 //summary: (entry.summary ? entry.summary.$t : ''),
+                //set: set,
                 thumbnail: (entry.media$thumbnail ? entry.media$thumbnail.url : ''),
-                score: compare(_this._data.set, set)
+                score: compare(data.set, set)
               });
             }
             break;
@@ -159,9 +190,9 @@
         }
       }
       
-      _this._data.count++;
-      if (_this._data.count == _this._data.limit) {
-        write(_this._data);
+      data.count++;
+      if (data.count == data.limit) {
+        write(data);
       }
     } else {
       // ありえない
@@ -169,63 +200,54 @@
   };
   
   // 初期化
-  _this.init = function(obj) {
-    _this._data = obj;
-    _this._data.url = _this._data.url.split('?')[0];
-    _this._data.count = 0;
-    _this._data.limit = _this._data.labels.length;
-    _this._data.pageMap = new Map();
+  _this.init = function(data) {
+    _this._data = data;
+    data.url = data.url.split('?')[0];
+    data.count = 0;
+    data.limit = data.labels.length;
+    data.pageMap = new Map();
     
-    if (_this._data.min == null) { _this._data.min = 1; }
-    if (_this._data.max == null) { _this._data.max = 5; }
-    if (!_this._data.homepageUrl) {
-      const m = _this._data.url.match(/^(.+?):\/\/(.+?):?(\d+)?(\/.*)?$/);
-      _this._data.homepageUrl = m[1]+'://'+m[2]+(m[3] ? ':'+m[3] : '')+'/';
+    if (data.min == null) { data.min = 1; }
+    if (data.max == null) { data.max = 5; }
+    if (!data.homepageUrl) {
+      const m = data.url.match(/^(.+?):\/\/(.+?):?(\d+)?(\/.*)?$/);
+      data.homepageUrl = m[1]+'://'+m[2]+(m[3] ? ':'+m[3] : '')+'/';
     }
     
     // セット作成
-    _this._data.gramify = _this._data.useSetType == 'engramify' ? engramify : trigramify;
-    _this._data.set = _this._data.gramify(_this._data.title);
+    data.gramify = data.useSetType == 'engramify' ? engramify : trigramify;
+    data.set = data.gramify(data.title);
     
     // スニペットを追加設定
-    if (_this._data.useSnippet === true && _this._data.snippet) {
-      _this._data.snippet = htmlscd(_this._data.snippet);
-      _this._data.gramify(_this._data.snippet, _this._data.set);
+    if (data.useSnippet === true && data.snippet) {
+      data.snippet = htmlscd(data.snippet);
+      data.gramify(data.snippet, data.set);
     }
     
-    // 事前指定の関連記事
-    const element = document.getElementById('related-posts-data-json');
-    if (element) {
-      try {
-        const json = JSON.parse(element.textContent);
-        for (let j=0; j<json.length; j++) {
-          if (json[j].visible !== false) {
-            json[j].score = _this._data.limit + 1 - j;
-            _this._data.pageMap.set(json[j].url, json[j]);
-          }
-        }
-      } catch (e) {
-        //console.log('Processing of "#related-posts-data-json" data failed.');
-        _this._data.pageMap = new Map();
+    // 事前指定
+    for (let p=0; p<data.pages.length; p++) {
+      if (data.pages[p].visible !== false) {
+        data.pages[p].score = data.limit + 1 - p;
+        data.pageMap.set(data.pages[p].url, data.pages[p]);
       }
     }
     
-    if (_this._data.pageMap.size < _this._data.max) {
-      const feed = _this._data.homepageUrl+'feeds/posts/summary/-/';
+    if (data.pageMap.size < data.max) {
+      const feed = data.homepageUrl+'feeds/posts/summary/-/';
       const params = '?alt=json-in-script&callback=BloggerRelatedPosts.add'
-                   + (_this._data.params ? '&'+_this._data.params : '');
-      const isMaxResults = _this._data.params && _this._data.params.indexOf('max-results=') >= 0;
-      if (_this._data.limit == 0) {
+                   + (data.params ? '&'+data.params : '');
+      const isMaxResults = data.params && data.params.indexOf('max-results=') >= 0;
+      if (data.limit == 0) {
         // ラベルなし（処理終了）
-      } else if (_this._data.limit == 1) {
-        loadScript(feed+_this._data.labels[0]+params+(isMaxResults ? '' : '&max-results=100'));
-      } else if (_this._data.limit == 2) {
-        loadScript(feed+_this._data.labels[0]+params+(isMaxResults ? '' : '&max-results=50'));
-        loadScript(feed+_this._data.labels[1]+params+(isMaxResults ? '' : '&max-results=50'));
+      } else if (data.limit == 1) {
+        loadScript(feed+data.labels[0]+params+(isMaxResults ? '' : '&max-results=100'));
+      } else if (data.limit == 2) {
+        loadScript(feed+data.labels[0]+params+(isMaxResults ? '' : '&max-results=50'));
+        loadScript(feed+data.labels[1]+params+(isMaxResults ? '' : '&max-results=50'));
       } else {
-        for (let i=0; i<_this._data.limit; i++) {
+        for (let i=0; i<data.limit; i++) {
           // max-results=25(default)
-          loadScript(feed+_this._data.labels[i]+params)
+          loadScript(feed+data.labels[i]+params)
         }
       }
       // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json-in-script
@@ -233,7 +255,7 @@
       // 補足：ラベルの複数指定方法もある（.../-/label1/label2?...）
       //       ただし、AND検索である（現状使いみちが思いつかなかったため、使用しない）
     } else {
-      write(_this._data);
+      write(data);
     }
   };
   
@@ -242,48 +264,77 @@
 });
 
 /*<!--
-// 関連記事の設定
+// サイトの関連記事設定
 // 下記の<script>をBlogウィジェット内に設定してください。
-// JSON内容を変更することで、関連記事の出力を制御することができます。
-// 補足：url, title, labels は、必須項目です
-// 補足：JSONではコメントが使用できないため、コメントを削除して使用してください
-<script type='application/json' id='related-posts-json'>
+<script type='application/json' id='related-posts-site-json'>
 {
-  "debug": false,                               // デバッグモード（default=false）
-  "homepageUrl": "<data:blog.homepageUrl/>",    // ホームページのURL（default=urlのhomepageUrlを使用）
-  "params": "orderby=updated",                  // feedsの追加パラメータ（default=''）
-  "url": "<data:post.url/>",                    // 関連記事の設置投稿のURL
-  "title": "<data:post.title.jsonEscaped/>",    // 関連記事の設置投稿のタイトル
-  "snippet": "<data:post.snippet.jsonEscaped/>",// 関連記事の設置投稿のスニペット（default=''）
+  "debug": false,
+  "pageJsonQuery": "#related-posts-page-json",
+  "homepageUrl": "<data:blog.homepageUrl/>",
+  "params": "orderby=updated",
+  "labels": [<b:loop values='data:post.labels' var='label' index='i'><b:if cond='data:i != 0'>,</b:if>"<data:label.name.jsonEscaped/>"</b:loop>],
+  "url": "<data:post.url/>",
+  "title": "<data:post.title.jsonEscaped/>",
+  "snippet": "<data:post.snippet.jsonEscaped/>",
        // or "<data:post.snippets.short.jsonEscaped/>"  // widget version 1 or 2
-  "useSnippet": true,                           // snippetを使用する（関連度上昇目的）（default=false）
-  "useSummary": false,                          // summaryを使用する（関連度上昇目的）（default=false）
-  "gramify": "trigramify",                      // 文字列分割方式（default='trigramify'）
-       // or "engramify"  // 3文字分割（日本語環境用） or 英単語分割（英語環境用）
-  "min": 1,                                     // 関連記事の最小数（未満は表示しない）（default=1）
-  "max": 5,                                     // 関連記事の最大数（関連度上位表示する）（default=5）
-  "insertPositionQuery": "#related-posts-json", // 挿入位置のID（指定要素の直後に挿入する）（default='#related-posts-json'）
-  "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>", // 関連記事HTMLの接頭辞（default=''）
-  "format": "<li><a href='${url}'>${title}</a></li>", // 関連記事HTMLの書式（${url}, ${title}を置換る）（default=''）
-  "sufix": "</ul></div>",                       // 関連記事HTMLの接尾辞（default=''）
-  "labels": [<b:loop values='data:post.labels' var='label' index='i'><b:if cond='data:i != 0'>,</b:if>"<data:label.name.jsonEscaped/>"</b:loop>]
-                                                // 関連記事の設置投稿のラベル
+  "useSnippet": true,
+  "useSummary": false,
+  "gramify": "trigramify",
+  "min": 1,
+  "max": 5,
+  "insertPositionQuery": "#related-posts-site-json",
+  "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>",
+  "sufix": "</ul></div>",
+  "format": "<li data-score='${score}'><a href='${url}'>${title}</a></li>", 
+  "pages": [
+     {"visible":false, "url":"https://.../page1.html", "title":"title1"}
+    ,{"visible":true, "url":"https://.../page2.html", "title":"title2"}
+    , ...
+  ]
 }
 </script>
 
-// 事前指定の関連記事設定
+// ページの関連記事設定
 // 下記の<script>を投稿内に設定してください。
-// 最大数(max)以上設定している場合、配列の先頭から順に最大数分表示します。
-// 最大数(max)未満設定している場合、配列の先頭から順に表示し、それ以降を関連度順に表示します。
-// #related-posts-data-jsonの設定がページ内に存在しない場合、関連度順に表示します。
-// <script>の記載が難しい場合、<div hidden>などで対応できないか検討ください。
-// 補足：url, title は、必須項目です
-// 補足：visible は、 default=true です
-<script type='application/json' id='related-posts-data-json'>
-[
-   {"visible": false, "url": "https://.../page1.html", "title": "title1"}
-  ,{"visible": true, "url": "https://.../page2.html", "title": "title2", "thumbnail": "thumbnail URL"}
-  , ...
-]
+// ページ設定は、サイト設定を上書きます。（pagesのみ末尾追加します）
+<script type='application/json' id='related-posts-page-json'>
+{
+  "max": 5,
+  "pages": [
+     {"visible": false, "url":"https://.../page1.html", "title":"title1"}
+    ,{"visible": true, "url":"https://.../page2.html", "title":"title2", "thumbnail":"thumbnail URL"}
+    , ...
+  ]
+}
 </script>
+
+json          | 必須 | 初期値                     | 説明                         | 備考
+---           | ---  | ---                        | ---                          | ---
+debug         | -    | false                      | デバッグ機能を有効にする
+siteJsonQuery | -    | "#related-posts-site-json" | サイト設定JSONのクエリー
+pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
+homepageUrl   | -    | ""                         | ホームページのURL            | プレビュー画面用
+params        | -    | ""                         | feeds取得用の追加パラメータ
+labels        | 必須 | -                          | 関連記事の設置投稿のラベル
+url           | 必須 | -                          | 関連記事の設置投稿のURL
+title         | 必須 | -                          | 関連記事の設置投稿のタイトル
+snippet       | -    | ""                         | 関連記事の設置投稿のスニペット
+useSnippet    | -    | false                      | snippetを使用する            | 関連度上昇目的
+useSummary    | -    | false                      | summaryを使用する            | 関連度上昇目的
+gramify       | -    | "trigramify"               | 文字列分割方式               | "trigramify"（3文字分割：日本語用）, "engramify"（英単語分割：英語用）が指定可能
+min           | -    | 1                          | 関連記事の最小数             | 未満は表示しない
+max           | -    | 5                          | 関連記事の最大数             | 関連度上位表示する
+insertPositionQuery | - | "#related-posts-site-json" | 関連記事HTMLの挿入位置のクエリー
+prefix        | -    | ""                         | 関連記事HTMLの接頭辞
+sufix         | -    | ""                         | 関連記事HTMLの接尾辞
+format        | -    | ""                         | 関連記事HTMLの書式           | ${url}, ${title}, ${thumbnail}, ${score}, ${$} が使用できる
+pages         | -    | []                         | 事前指定の関連記事設定       | 配列先頭から順に表示する。最大数（max）を超えて表示しない。設定数が最大数に満たない場合、余りを関連度順で表示する。
+pages.visible | -    | true                       | 項目を表示する               | 未使用設定保存用
+pages.url     | 必須 | -                          | ページURL                    | 関連記事に同一URLを表示しないが、http・https混在環境では重複する可能性がある
+pages.title   | 必須 | -                          | ページタイトル
+pages.thumbnail | -  | -                          | ページサムネイル画像URL
+pages.score   | -    | -                          | 関連度                       | BloggerRelatedPosts.js内部で計算する
+
+※<script>の記載が難しい場合、<div hidden>などで対応できないか検討ください
+
 -->*/
