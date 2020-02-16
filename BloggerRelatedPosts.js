@@ -24,6 +24,7 @@
  * @see         1.20200213 - update - ${score}, ${$} を出力
  * @see         1.20200213 - fix - 事前指定時にm=1のURLと重複することがある
  * @see         1.20200216 - update - pushPages, insertQueryに修正
+ * @see         1.20200216 - update - enableを追加
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -55,8 +56,10 @@
       data.pages = pages;
     }
     
-    root.BloggerRelatedPosts = factory(document);
-    root.BloggerRelatedPosts.init(data);
+    if (data.enable === true) {
+      root.BloggerRelatedPosts = factory(document);
+      root.BloggerRelatedPosts.init(data);
+    }
   }
 })(this, function(document) {
   "use strict";
@@ -314,6 +317,7 @@
 json          | 必須 | 初期値                     | 説明                         | 備考
 ---           | ---  | ---                        | ---                          | ---
 debug         | -    | false                      | デバッグ機能を有効にする
+enable        | 必須 | -                          | 機能が有効である
 pushPages     | -    | false                      | pagesを上位設定pagesの末尾に追加する
 pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
 homepageUrl   | -    | ""                         | ホームページのURL            | プレビュー画面用
