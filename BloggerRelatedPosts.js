@@ -25,6 +25,7 @@
  * @see         1.20200213 - fix - 事前指定時にm=1のURLと重複することがある
  * @see         1.20200216 - update - pushPages, insertQueryに修正
  * @see         1.20200216 - update - enableを追加
+ * @see         1.20200216 - fix - m=1ページでJSONロードに失敗する
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -219,6 +220,7 @@
       const m = data.url.match(/^(.+?):\/\/(.+?):?(\d+)?(\/.*)?$/);
       data.homepageUrl = m[1]+'://'+m[2]+(m[3] ? ':'+m[3] : '')+'/';
     }
+    data.homepageUrl = data.homepageUrl.split('?')[0];
     
     // セット作成
     data.gramify = data.useSetType == 'engramify' ? engramify : trigramify;
