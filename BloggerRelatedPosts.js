@@ -13,6 +13,7 @@
  * + `script defer="1"`で読み込む
  * 対応：IE11+（Set/Mapがボトルネック）
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
+ * 関連：https://github.com/k08045kk/PageListWidget.js
  * @auther      toshi (https://github.com/k08045kk)
  * @version     1
  * @see         1.20200211 - add - 初版
@@ -22,22 +23,22 @@
  * @see         1.20200213 - update - 関連記事設定の構造を変更
  * @see         1.20200213 - update - ${score}, ${$} を出力
  * @see         1.20200213 - fix - 事前指定時にm=1のURLと重複することがある
+ * @see         1.20200216 - update - pushPages, insertQueryに修正
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
-    const data = {};//window.BloggerRelatedPosts && window.BloggerRelatedPosts._data || {};
-    const query1 = data.siteJsonQuery || '#related-posts-site-json';
-    const element1 = document.querySelector(query1);
+    // 設定JSON作成
+    const data = {};
+    const element1 = document.getElementById('related-posts-site-json');
     const data1 = element1 && JSON.parse(element1.textContent) || {};
     const query2 = data1.pageJsonQuery || '#related-posts-page-json';
     const element2 = document.querySelector(query2);
-    
-    // 設定JSON作成（pagesのみ末尾追加）
     let data2 = {};
     try {
       data2 = element2 && JSON.parse(element2.textContent) || {};
     } catch (e) {}
-    const pages = data.pages || [];
+    data.pages = [];
+    const pages = data.pages;
     Array.prototype.push.apply(pages, data1.pages || []);
     Array.prototype.push.apply(pages, data2.pages || []);
     for (const key in data1) {
@@ -50,7 +51,9 @@
         data[key] = data2[key];
       }
     }
-    data.pages = pages;
+    if (data.pushPages === true) {
+      data.pages = pages;
+    }
     
     root.BloggerRelatedPosts = factory(document);
     root.BloggerRelatedPosts.init(data);
@@ -115,7 +118,7 @@
     return set;
   };
   
-  // trigramを比較する
+  // trigram, engramifyを比較する
   const compare = function(set1, set2) {
     let count = 0;
     set1.forEach(function(value) {
@@ -152,7 +155,7 @@
       const html = (data.prefix || '') + lines.join('') + (data.sufix || '');
       
       // 指定要素の直後に挿入
-      const query = data.insertPositionQuery || '#related-posts-site-json';
+      const query = data.insertQuery || '#related-posts-site-json';
       document.querySelector(query).insertAdjacentHTML('afterend', html);
     }
     
@@ -282,7 +285,7 @@
   "gramify": "trigramify",
   "min": 1,
   "max": 5,
-  "insertPositionQuery": "#related-posts-site-json",
+  "insertQuery": "#related-posts-site-json",
   "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>",
   "sufix": "</ul></div>",
   "format": "<li data-score='${score}'><a href='${url}'>${title}</a></li>", 
@@ -311,7 +314,7 @@
 json          | 必須 | 初期値                     | 説明                         | 備考
 ---           | ---  | ---                        | ---                          | ---
 debug         | -    | false                      | デバッグ機能を有効にする
-siteJsonQuery | -    | "#related-posts-site-json" | サイト設定JSONのクエリー
+pushPages     | -    | false                      | pagesを上位設定pagesの末尾に追加する
 pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
 homepageUrl   | -    | ""                         | ホームページのURL            | プレビュー画面用
 params        | -    | ""                         | feeds取得用の追加パラメータ
@@ -324,7 +327,7 @@ useSummary    | -    | false                      | summaryを使用する      
 gramify       | -    | "trigramify"               | 文字列分割方式               | "trigramify"（3文字分割：日本語用）, "engramify"（英単語分割：英語用）が指定可能
 min           | -    | 1                          | 関連記事の最小数             | 未満は表示しない
 max           | -    | 5                          | 関連記事の最大数             | 関連度上位表示する
-insertPositionQuery | - | "#related-posts-site-json" | 関連記事HTMLの挿入位置のクエリー
+insertQuery   | -    | "#related-posts-site-json" | 関連記事HTMLの挿入位置のクエリー
 prefix        | -    | ""                         | 関連記事HTMLの接頭辞
 sufix         | -    | ""                         | 関連記事HTMLの接尾辞
 format        | -    | ""                         | 関連記事HTMLの書式           | ${url}, ${title}, ${thumbnail}, ${score}, ${$} が使用できる
