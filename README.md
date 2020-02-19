@@ -6,7 +6,7 @@ Place related articles on Blogger.
 
 
 ## Description
-Related articles are created based on post titles and labels. Relevance of related articles is determined by the trigram match of the title character string. From the #related-posts-json element to be described separately, place related articles based on the setting JSON to be created. Related article contents can be specified in advance from the #related-posts-data-json element described separately.
+Related articles are created based on post titles, labels, and summaries. The relevance of related articles is determined by the matching of `trigram` and `engramify` based on the title and summary. At the bottom of the source, place related articles based on the related article settings of the site and the related article settings of the page separately described. Settings are used by overwriting [Site Settings] with [Page Settings]. Please read (execute) this script after the related article setting.
 
 
 
