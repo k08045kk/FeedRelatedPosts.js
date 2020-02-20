@@ -27,6 +27,7 @@
  * @see         1.20200216 - update - enableを追加
  * @see         1.20200216 - fix - m=1ページでJSONロードに失敗する
  * @see         1.20200220 - update - dummy指定を追加
+ * @see         1.20200221 - update - リファクタリング
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -123,8 +124,8 @@
     return set;
   };
   
-  // trigram, engramifyを比較する
-  const compare = function(set1, set2) {
+  // trigram, engramifyの関連度を計算する
+  const relevance = function(set1, set2) {
     let count = 0;
     set1.forEach(function(value) {
       if (set2.has(value)) {
@@ -197,7 +198,7 @@
                 //summary: (entry.summary ? entry.summary.$t : ''),
                 //set: set,
                 thumbnail: (entry.media$thumbnail ? entry.media$thumbnail.url : ''),
-                score: compare(data.set, set)
+                score: relevance(data.set, set)
               });
             }
             break;
