@@ -26,6 +26,7 @@
  * @see         1.20200216 - update - pushPages, insertQueryに修正
  * @see         1.20200216 - update - enableを追加
  * @see         1.20200216 - fix - m=1ページでJSONロードに失敗する
+ * @see         1.20200220 - update - dummy指定を追加
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -145,9 +146,10 @@
     pages.sort(function(a, b) { return b.score - a.score; });
     
     const max = Math.min(data.max, pages.length);
-    if (max >= data.min) {
+    if (data.min <= max) {
       const lines = [];
-      for (let i=0; i<max; i++) {
+      let i = 0;
+      for (; i<max; i++) {
         lines.push(data.format.replace(/\${url}/ig, pages[i].url)
                               .replace(/\${title}/ig, pages[i].title)
                               //.replace(/\${summary}/ig, pages[i].summary)
@@ -155,6 +157,11 @@
                               .replace(/\${thumbnail}/ig, pages[i].thumbnail || '')
                               .replace(/\${score}/ig, pages[i].score)
                               .replace(/\${\$}/ig, '$'));
+      }
+      if (data.min == -1) {
+        for (; i<data.max; i++) {
+          lines.push(data.dummy || '');
+        }
       }
       const html = (data.prefix || '') + lines.join('') + (data.sufix || '');
       
@@ -167,6 +174,7 @@
       // メモリ開放
       data.pageMap = null;
     }
+    data.complate = true;
   };
   
   // フィードの要素を追加する
@@ -246,7 +254,10 @@
                    + (data.params ? '&'+data.params : '');
       const isMaxResults = data.params && data.params.indexOf('max-results=') >= 0;
       if (data.limit == 0) {
-        // ラベルなし（処理終了）
+        // ラベルなし時
+        if (data.min <= data.pageMap.size) {
+          write(data);
+        }
       } else if (data.limit == 1) {
         loadScript(feed+data.labels[0]+params+(isMaxResults ? '' : '&max-results=100'));
       } else if (data.limit == 2) {
@@ -263,6 +274,7 @@
       // 補足：ラベルの複数指定方法もある（.../-/label1/label2?...）
       //       ただし、AND検索である（現状使いみちが思いつかなかったため、使用しない）
     } else {
+      // 事前指定が規定数を満たした時
       write(data);
     }
   };
@@ -288,11 +300,12 @@
   "useSnippet": true,
   "useSummary": false,
   "gramify": "trigramify",
-  "min": 1,
+  "min": -1,
   "max": 5,
   "insertQuery": "#related-posts-site-json",
   "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>",
   "sufix": "</ul></div>",
+  "dummy": "<li>&amp;nbsp;</li>",
   "format": "<li data-score='${score}'><a href='${url}'>${title}</a></li>", 
   "pages": [
      {"visible":false, "url":"https://.../page1.html", "title":"title1"}
@@ -331,18 +344,19 @@ snippet       | -    | ""                         | 関連記事の設置投稿�
 useSnippet    | -    | false                      | snippetを使用する            | 関連度上昇目的
 useSummary    | -    | false                      | summaryを使用する            | 関連度上昇目的
 gramify       | -    | "trigramify"               | 文字列分割方式               | "trigramify"（3文字分割：日本語用）, "engramify"（英単語分割：英語用）が指定可能
-min           | -    | 1                          | 関連記事の最小数             | 未満は表示しない
+min           | -    | 1                          | 関連記事の最小数             | 未満は表示しない（-1:dummyを使用してmaxまで表示）
 max           | -    | 5                          | 関連記事の最大数             | 関連度上位表示する
 insertQuery   | -    | "#related-posts-site-json" | 関連記事HTMLの挿入位置のクエリー
 prefix        | -    | ""                         | 関連記事HTMLの接頭辞
 sufix         | -    | ""                         | 関連記事HTMLの接尾辞
+dummy         | -    | ""                         | 関連記事HTMLのダミー         | 書式は使用できない
 format        | -    | ""                         | 関連記事HTMLの書式           | ${url}, ${title}, ${thumbnail}, ${score}, ${$} が使用できる
 pages         | -    | []                         | 事前指定の関連記事設定       | 配列先頭から順に表示する。最大数（max）を超えて表示しない。設定数が最大数に満たない場合、余りを関連度順で表示する。
 pages.visible | -    | true                       | 項目を表示する               | 未使用設定保存用
 pages.url     | 必須 | -                          | ページURL                    | 関連記事に同一URLを表示しないが、http・https混在環境では重複する可能性がある
 pages.title   | 必須 | -                          | ページタイトル
 pages.thumbnail | -  | -                          | ページサムネイル画像URL
-pages.score   | -    | -                          | 関連度                       | BloggerRelatedPosts.js内部で計算する
+pages.score   | 不可 | -                          | 関連度                       | システム内部の変数
 
 ※<script>の記載が難しい場合、<div hidden>などで対応できないか検討ください
 
