@@ -60,7 +60,7 @@
       data.pages = pages;
     }
     
-    if (data.enable === true) {
+    if (data.enable !== false) {
       root.BloggerRelatedPosts = factory(document);
       root.BloggerRelatedPosts.init(data);
     }
@@ -213,8 +213,8 @@
         }
       }
       
-      data.count++;
-      if (data.count == data.limit) {
+      data.count = data.count + 1;
+      if (data.count >= data.limit) {
         write(data);
       }
     } else {
@@ -331,7 +331,7 @@
   "max": 5,
   "pages": [
      {"visible": false, "url":"https://.../page1.html", "title":"title1"}
-    ,{"visible": true, "url":"https://.../page2.html", "title":"title2", "thumbnail":"thumbnail URL"}
+    ,{"visible": true,  "url":"https://.../page2.html", "title":"title2", "thumbnail":"thumbnail URL"}
     , ...
   ]
 }
@@ -340,7 +340,7 @@
 json          | 必須 | 初期値                     | 説明                         | 備考
 ---           | ---  | ---                        | ---                          | ---
 debug         | -    | false                      | デバッグ機能を有効にする
-enable        | 必須 | -                          | 機能が有効である
+enable        | -    | true                       | 機能が有効である
 pushPages     | -    | false                      | pagesを上位設定pagesの末尾に追加する
 pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
 homepageUrl   | -    | ""                         | ホームページのURL            | プレビュー画面用
