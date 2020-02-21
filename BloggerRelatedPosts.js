@@ -128,8 +128,8 @@
   // trigram, engramifyの関連度を計算する
   const relevance = function(set1, set2) {
     let count = 0;
-    set1.forEach(function(value) {
-      if (set2.has(value)) {
+    set2.forEach(function(value) {
+      if (set1.has(value)) {
         count = count + 1;
       }
     });
@@ -137,6 +137,7 @@
     // count: 一致数
     // set1.size + set2.size - count: チェック数
     // return: 0-1 (0: 不一致, 1:一致(完全一致とは限らない))
+    // 第二引数が小さい方が高速に動作する(set1.size > set2.size)
   };
   
   // 関連記事を書き込む
