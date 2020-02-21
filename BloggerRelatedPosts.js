@@ -28,6 +28,7 @@
  * @see         1.20200216 - fix - m=1ページでJSONロードに失敗する
  * @see         1.20200220 - update - dummy指定を追加
  * @see         1.20200221 - update - リファクタリング
+ * @see         1.20200221 - update - 関連度が等しい場合、更新日が新しいものを優先する
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -144,7 +145,10 @@
     data.pageMap.forEach(function(value) {
       pages.push(value);
     });
-    pages.sort(function(a, b) { return b.score - a.score; });
+    pages.sort(function(a, b) {
+      // 関連度が高い || 更新日が新しい
+      return b.score - a.score || new Date(b.updated) - new Date(a.updated);
+    });
     
     const max = Math.min(data.max, pages.length);
     if (data.min <= max) {
@@ -195,6 +199,8 @@
               data.pageMap.set(entry.link[k].href.split('?')[0], {
                 url: entry.link[k].href,
                 title: entry.link[k].title, 
+                //published: (entry.published ? entry.published.$t : ''),
+                updated: (entry.updated ? entry.updated.$t : ''), 
                 //summary: (entry.summary ? entry.summary.$t : ''),
                 //set: set,
                 thumbnail: (entry.media$thumbnail ? entry.media$thumbnail.url : ''),
