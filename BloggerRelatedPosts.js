@@ -251,7 +251,7 @@
     
     if (data.pageMap.size < data.max) {
       const feed = data.homepageUrl+'feeds/posts/summary/-/';
-      const params = '?alt=json-in-script&callback=BloggerRelatedPosts.add'
+      const params = '?alt=json&callback=BloggerRelatedPosts.add'
                    + (data.params ? '&'+data.params : '');
       const isMaxResults = data.params && data.params.indexOf('max-results=') >= 0;
       if (data.limit == 0) {
@@ -270,7 +270,7 @@
           loadScript(feed+data.labels[i]+params)
         }
       }
-      // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json-in-script
+      // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json&callback=BloggerRelatedPosts.add
       // 補足：homepageUrlは、プレビュー画面動作用です
       // 補足：ラベルの複数指定方法もある（.../-/label1/label2?...）
       //       ただし、AND検索である（現状使いみちが思いつかなかったため、使用しない）
