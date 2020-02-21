@@ -29,6 +29,7 @@
  * @see         1.20200220 - update - dummy指定を追加
  * @see         1.20200221 - update - リファクタリング
  * @see         1.20200221 - update - 関連度が等しい場合、更新日が新しいものを優先する
+ * @see         1.20200222 - fix - 事前指定が優先されないことがある
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -251,7 +252,7 @@
     // 事前指定
     for (let p=0; p<data.pages.length; p++) {
       if (data.pages[p].visible !== false) {
-        data.pages[p].score = data.limit + 1 - p;
+        data.pages[p].score = data.pages.length + 1 - p;
         data.pageMap.set(data.pages[p].url, data.pages[p]);
       }
     }
