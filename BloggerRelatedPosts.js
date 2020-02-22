@@ -30,6 +30,8 @@
  * @see         1.20200221 - update - リファクタリング
  * @see         1.20200221 - update - 関連度が等しい場合、更新日が新しいものを優先する
  * @see         1.20200222 - fix - 事前指定が優先されないことがある
+ * @see         1.20200222 - update - 最新投稿を使用可能とする
+ 
  */
 (function(root, factory) {
   if (!root.BloggerRelatedPosts) {
@@ -189,29 +191,33 @@
     const data = _this._data;
     if (data.pageMap) {
       // フィード解析処理
-      for (let i=0; i<json.feed.entry.length; i++) {
-        let entry = json.feed.entry[i];
-        for (let k=0; k<entry.link.length; k++) {
-          if (entry.link[k].rel == 'alternate') {
-            if (data.url != entry.link[k].href && !data.pageMap.has(entry.link[k].href)) {
-              const set = data.gramify(entry.link[k].title);
-              if (data.useSummary === true && entry.summary && entry.summary.$t) {
-                data.gramify(entry.summary.$t, set);
+      try {
+        for (let i=0; i<json.feed.entry.length; i++) {
+          let entry = json.feed.entry[i];
+          for (let k=0; k<entry.link.length; k++) {
+            if (entry.link[k].rel == 'alternate') {
+              if (data.url != entry.link[k].href && !data.pageMap.has(entry.link[k].href)) {
+                const set = data.gramify(entry.link[k].title);
+                if (data.useSummary === true && entry.summary && entry.summary.$t) {
+                  data.gramify(entry.summary.$t, set);
+                }
+                data.pageMap.set(entry.link[k].href.split('?')[0], {
+                  url: entry.link[k].href,
+                  title: entry.link[k].title, 
+                  //published: (entry.published ? entry.published.$t : ''),
+                  updated: (entry.updated ? entry.updated.$t : ''), 
+                  //summary: (entry.summary ? entry.summary.$t : ''),
+                  //set: set,
+                  thumbnail: (entry.media$thumbnail ? entry.media$thumbnail.url : ''),
+                  score: relevance(data.set, set)
+                });
               }
-              data.pageMap.set(entry.link[k].href.split('?')[0], {
-                url: entry.link[k].href,
-                title: entry.link[k].title, 
-                //published: (entry.published ? entry.published.$t : ''),
-                updated: (entry.updated ? entry.updated.$t : ''), 
-                //summary: (entry.summary ? entry.summary.$t : ''),
-                //set: set,
-                thumbnail: (entry.media$thumbnail ? entry.media$thumbnail.url : ''),
-                score: relevance(data.set, set)
-              });
+              break;
             }
-            break;
           }
         }
+      } catch (e) {
+        //console.log('BloggerRelatedPosts.add(): error.\n'+json);
       }
       
       data.count = data.count + 1;
@@ -228,7 +234,7 @@
     _this._data = data;
     data.url = data.url.split('?')[0];
     data.count = 0;
-    data.limit = data.labels.length;
+    data.limit = data.labels.length + (data.useLastPosts === true ? 1 : 0);
     data.pageMap = new Map();
     
     if (data.min == null) { data.min = 1; }
@@ -258,7 +264,7 @@
     }
     
     if (data.pageMap.size < data.max) {
-      const feed = data.homepageUrl+'feeds/posts/summary/-/';
+      const feed = data.homepageUrl+'feeds/posts/summary';
       const params = '?alt=json&callback=BloggerRelatedPosts.add'
                    + (data.params ? '&'+data.params : '');
       const isMaxResults = data.params && data.params.indexOf('max-results=') >= 0;
@@ -267,18 +273,22 @@
         if (data.min <= data.pageMap.size) {
           write(data);
         }
-      } else if (data.limit == 1) {
-        loadScript(feed+data.labels[0]+params+(isMaxResults ? '' : '&max-results=100'));
-      } else if (data.limit == 2) {
-        loadScript(feed+data.labels[0]+params+(isMaxResults ? '' : '&max-results=50'));
-        loadScript(feed+data.labels[1]+params+(isMaxResults ? '' : '&max-results=50'));
+      } else if (data.labels.length == 1) {
+        loadScript(feed+'/-/'+data.labels[0]+params+(isMaxResults ? '' : '&max-results=100'));
+      } else if (data.labels.length == 2) {
+        loadScript(feed+'/-/'+data.labels[0]+params+(isMaxResults ? '' : '&max-results=50'));
+        loadScript(feed+'/-/'+data.labels[1]+params+(isMaxResults ? '' : '&max-results=50'));
       } else {
-        for (let i=0; i<data.limit; i++) {
+        for (let i=0; i<data.labels.length; i++) {
           // max-results=25(default)
-          loadScript(feed+data.labels[i]+params)
+          loadScript(feed+'/-/'+data.labels[i]+params)
         }
       }
+      if (data.useLastPosts === true) {
+        loadScript(feed+params);
+      }
       // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json&callback=BloggerRelatedPosts.add
+      //     http://www.bugbugnow.net/feeds/posts/summary?alt=json&callback=BloggerRelatedPosts.add
       // 補足：homepageUrlは、プレビュー画面動作用です
       // 補足：ラベルの複数指定方法もある（.../-/label1/label2?...）
       //       ただし、AND検索である（現状使いみちが思いつかなかったため、使用しない）
@@ -295,10 +305,10 @@
 /*<!--
 // サイトの関連記事設定
 // 下記の<script>をBlogウィジェット内に設定してください。
+// ※JSONでコメントは使用不可です
 <script type='application/json' id='related-posts-site-json'>
 {
   "debug": false,
-  "pageJsonQuery": "#related-posts-page-json",
   "homepageUrl": "<data:blog.homepageUrl/>",
   "params": "orderby=updated",
   "labels": [<b:loop values='data:post.labels' var='label' index='i'><b:if cond='data:i != 0'>,</b:if>"<data:label.name.jsonEscaped/>"</b:loop>],
@@ -311,16 +321,10 @@
   "gramify": "trigramify",
   "min": -1,
   "max": 5,
-  "insertQuery": "#related-posts-site-json",
   "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>",
   "sufix": "</ul></div>",
   "dummy": "<li>&amp;nbsp;</li>",
   "format": "<li data-score='${score}'><a href='${url}'>${title}</a></li>", 
-  "pages": [
-     {"visible":false, "url":"https://.../page1.html", "title":"title1"}
-    ,{"visible":true, "url":"https://.../page2.html", "title":"title2"}
-    , ...
-  ]
 }
 </script>
 
@@ -328,14 +332,11 @@
 // 下記の<script>を投稿内に設定してください。
 // ページ設定は、サイト設定を上書きます。（pagesのみ末尾追加します）
 <script type='application/json' id='related-posts-page-json'>
-{
-  "max": 5,
-  "pages": [
-     {"visible": false, "url":"https://.../page1.html", "title":"title1"}
-    ,{"visible": true,  "url":"https://.../page2.html", "title":"title2", "thumbnail":"thumbnail URL"}
-    , ...
-  ]
-}
+{"pages":[
+   {"visible": false, "url":"https://.../page1.html", "title":"title1"}
+  ,{"visible": true,  "url":"https://.../page2.html", "title":"title2", "thumbnail":"thumbnail URL"}
+  , ...
+]}
 </script>
 
 json          | 必須 | 初期値                     | 説明                         | 備考
@@ -346,6 +347,7 @@ pushPages     | -    | false                      | pagesを上位設定pagesの
 pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
 homepageUrl   | -    | ""                         | ホームページのURL            | プレビュー画面用
 params        | -    | ""                         | feeds取得用の追加パラメータ
+useLastPosts  | -    | false                      | 最新投稿を関連記事の対象にする
 labels        | 必須 | -                          | 関連記事の設置投稿のラベル
 url           | 必須 | -                          | 関連記事の設置投稿のURL
 title         | 必須 | -                          | 関連記事の設置投稿のタイトル
