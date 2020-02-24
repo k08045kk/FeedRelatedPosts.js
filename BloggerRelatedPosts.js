@@ -120,7 +120,7 @@
   
   // 3文字づつに分解する
   const trigramify = function(text, set) {
-    text = text + '   ';
+    text = '  '+text.toLowerCase()+'  ';
     set = set || new Set();
     for (let i=text.length-2; i--; ) {
       set.add(text.substring(i, i+3));
