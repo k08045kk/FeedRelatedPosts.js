@@ -8,11 +8,12 @@
  * 設定は、[サイト設定]に[ページ設定]を上書きして利用します。
  * 本スクリプトの読込み（実行）は、関連記事設定より後に実行して下さい。
  * 使用方法として次の３つが考えられます。
- * + 関連記事設定より後に`script`を配置する
- * + 関連記事設定より後に`script async="1"`で読み込む
- * + `script defer="1"`で読み込む
+ *   + 関連記事設定より後に`script`を配置する
+ *   + 関連記事設定より後に`script async="1"`で読み込む
+ *   + `script defer="1"`で読み込む
  * 対応：IE11+（Set, Map）
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
+ * 補足：フィード読込みとフィード解析の変更で、Blogger以外にも対応も可能です。
  * @auther      toshi (https://github.com/k08045kk)
  * @version     1
  * @see         1.20200211 - add - 初版
@@ -33,10 +34,11 @@
  * @see         1.20200304 - update - データ格納方式変更（グローバル変数からの入力を有効化）
  * @see         1.20200304 - update - 名称変更 BloggerRelatedPosts.js -> FeedRelatedPosts.js
  * @see         1.20200304 - update - excludedAnkerQuery追加
+ * @see         1.20200305 - update - リファクタリング
  */
 (function(root, factory) {
   if (!root.FeedRelatedPosts) {
-    // 設定JSON作成
+    // 設定作成
     const obj = window.FeedRelatedPosts || function() {};
     const pages = (obj.pages = obj.pages || []);
     for (let i=0; i<2; i++) {
@@ -153,13 +155,16 @@
       const lines = [];
       let i = 0;
       for (; i<max; i++) {
-        lines.push(data.format.replace(/\${url}/ig, pages[i].url)
-                              .replace(/\${title}/ig, pages[i].title)
-                              //.replace(/\${summary}/ig, pages[i].summary)
-                              //.replace(/\${set}/ig, [...pages[i].set].join(' | '))
-                              .replace(/\${thumbnail}/ig, pages[i].thumbnail || '')
-                              .replace(/\${score}/ig, pages[i].score)
-                              .replace(/\${\$}/ig, '$'));
+        lines.push(data.format.replace(/\${(.*?)}/ig, function(match, p1) {
+          let ret = '';
+          switch (p1.toLowerCase()) {
+          case '$': ret = '$'; break;
+          //case 'set': ret = [...pages[i].set].join(' | ')); break;
+          default:
+            ret = pages[i].hasOwnProperty(p1) ? pages[i][p1] : '';
+          }
+          return ret;
+        }));
       }
       if (data.min == -1) {
         for (; i<data.max; i++) {
@@ -177,13 +182,13 @@
       // メモリ開放
       data.pageMap = null;
     }
-    data.complate = true;
+    data.state = 'complate';
   };
   
   // フィードの要素を追加する
   _this.add = function(json) {
     const data = _this;
-    if (data.complate !== true) {
+    if (data.state == 'loading') {
       // フィード解析処理
       try {
         for (let i=0; i<json.feed.entry.length; i++) {
@@ -226,6 +231,11 @@
   // 初期化
   _this.init = function() {
     var data = _this;
+    if (data.state) {
+      return;
+    }
+    
+    data.state = 'init';
     data.url = data.url.split('?')[0];
     data.count = 0;
     data.limit = data.labels.length + (data.useLastPosts === true ? 1 : 0);
@@ -266,6 +276,7 @@
         }
       }
       
+      // Feed読込み
       const feed = data.homepageUrl+'feeds/posts/summary';
       const params = '?alt=json&callback=FeedRelatedPosts.add'
                    + (data.params ? '&'+data.params : '');
@@ -274,7 +285,7 @@
         // ラベルなし時
         if (data.min <= data.pageMap.size) {
           write(data);
-        }
+        }// else 表示なし
       } else if (data.labels.length == 1) {
         loadScript(feed+'/-/'+data.labels[0]+params+(isMaxResults ? '' : '&max-results=100'));
       } else if (data.labels.length == 2) {
@@ -298,10 +309,10 @@
       // 事前指定が規定数を満たした時
       write(data);
     }
+    data.state = 'loading';
   };
   
   return _this;
-  // 補足：フィード読込みとフィード解析の変更で、Blogger以外にも対応も可能です
 });
 
 /*<!--
@@ -341,10 +352,11 @@
 ]}
 </script>
 
-json          | 必須 | 初期値                     | 説明                         | 備考
+プロパティ    | 必須 | 初期値                     | 説明                         | 備考
 ---           | ---  | ---                        | ---                          | ---
 debug         | -    | false                      | デバッグ機能を有効にする
-run           | -    | true                       | 実行する
+state         | -    | -                          | 状態                         | システム内部の変数
+run           | -    | true                       | 実行する                     | 読込み直後にRelatedPosts.init();を呼び出します
 pushPages     | -    | false                      | pagesを上位設定pagesの末尾に追加する
 siteJsonQuery | -    | "#related-posts-site-json" | サイト設定JSONのクエリー
 pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
