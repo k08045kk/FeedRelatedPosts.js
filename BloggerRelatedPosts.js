@@ -1,4 +1,4 @@
-/*! BloggerRelatedPosts.js v1 | MIT License | https://github.com/k08045kk/BloggerRelatedPosts.js/blob/master/LICENSE */
+/*! BloggerRelatedPosts.js v1 | MIT License | https://github.com/k08045kk/RelatedPosts.js/blob/master/LICENSE */
 /**
  * BloggerRelatedPosts.js
  * Bloggerに関連記事を設置します。
@@ -11,7 +11,7 @@
  * + 関連記事設定より後に`script`を配置する
  * + 関連記事設定より後に`script async="1"`で読み込む
  * + `script defer="1"`で読み込む
- * 対応：IE11+（Set/Mapがボトルネック）
+ * 対応：IE11+（Set, Map）
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * 関連：https://github.com/k08045kk/PageListWidget.js
  * @auther      toshi (https://github.com/k08045kk)
@@ -31,47 +31,37 @@
  * @see         1.20200221 - update - 関連度が等しい場合、更新日が新しいものを優先する
  * @see         1.20200222 - fix - 事前指定が優先されないことがある
  * @see         1.20200222 - update - 最新投稿を使用可能とする
- 
+ * @see         1.20200304 - update - データ格納方式変更（グローバル変数からの入力を有効化）
  */
 (function(root, factory) {
-  if (!root.BloggerRelatedPosts) {
+  if (!root.RelatedPosts) {
     // 設定JSON作成
-    const data = {};
-    const element1 = document.getElementById('related-posts-site-json');
-    const data1 = element1 && JSON.parse(element1.textContent) || {};
-    const query2 = data1.pageJsonQuery || '#related-posts-page-json';
-    const element2 = document.querySelector(query2);
-    let data2 = {};
-    try {
-      data2 = element2 && JSON.parse(element2.textContent) || {};
-    } catch (e) {}
-    data.pages = [];
-    const pages = data.pages;
-    Array.prototype.push.apply(pages, data1.pages || []);
-    Array.prototype.push.apply(pages, data2.pages || []);
-    for (const key in data1) {
-      if (data1.hasOwnProperty(key)) {
-        data[key] = data1[key];
-      }
+    const obj = window.RelatedPosts || function() {};
+    const pages = (obj.pages = obj.pages || []);
+    for (let i=0; i<2; i++) {
+      const query = i == 0 
+                  ? (obj.siteJsonQuery || '#related-posts-site-json') 
+                  : (obj.pageJsonQuery || '#related-posts-page-json')
+      const element = document.querySelector(query);
+      try {
+        const data = element && JSON.parse(element.textContent) || {};
+        Array.prototype.push.apply(pages, data.pages || []);
+        for (const key in data) {
+          if (data.hasOwnProperty(key)) {
+            obj[key] = data[key];
+          }
+        }
+      } catch (e) {}
     }
-    for (const key in data2) {
-      if (data2.hasOwnProperty(key)) {
-        data[key] = data2[key];
-      }
-    }
-    if (data.pushPages === true) {
-      data.pages = pages;
-    }
+    obj.pages = obj.pushPages === true ? pages : obj.pages;
     
-    if (data.enable !== false) {
-      root.BloggerRelatedPosts = factory(document);
-      root.BloggerRelatedPosts.init(data);
+    root.RelatedPosts = factory(obj, document);
+    if (obj.run !== false) {
+      root.RelatedPosts.init();
     }
   }
-})(this, function(document) {
+})(this, function(_this, document) {
   "use strict";
-  
-  const _this = function() {};
   
   // スクリプト動的読み込み
   const loadScript = function(src) {
@@ -87,7 +77,7 @@
   // see https://www.bugbugnow.net/2020/02/HTML-special-character-converter.html
   const htmlscd = (function() {
     const re = /&#(\d+);|&\w+;/g;
-    const map = {'&nbsp;':' ','&lt;':'<','&gt;':'>','&amp;':'&','&quot;':'"','&apos;':"'"};  //'
+    const map = {'&nbsp;':' ','&lt;':'<','&gt;':'>','&amp;':'&','&quot;':'"','&apos;':"'"};
     return function(text) {
       return text.replace(re, function(match, p1) {
         if (match.charAt(1) == '#') {
@@ -188,8 +178,8 @@
   
   // フィードの要素を追加する
   _this.add = function(json) {
-    const data = _this._data;
-    if (data.pageMap) {
+    const data = _this;
+    if (data.complate !== true) {
       // フィード解析処理
       try {
         for (let i=0; i<json.feed.entry.length; i++) {
@@ -217,7 +207,7 @@
           }
         }
       } catch (e) {
-        //console.log('BloggerRelatedPosts.add(): error.\n'+json);
+        //console.log('RelatedPosts.add(): error.\n'+json);
       }
       
       data.count = data.count + 1;
@@ -230,8 +220,8 @@
   };
   
   // 初期化
-  _this.init = function(data) {
-    _this._data = data;
+  _this.init = function() {
+    var data = _this;
     data.url = data.url.split('?')[0];
     data.count = 0;
     data.limit = data.labels.length + (data.useLastPosts === true ? 1 : 0);
@@ -265,9 +255,9 @@
     
     if (data.pageMap.size < data.max) {
       const feed = data.homepageUrl+'feeds/posts/summary';
-      const params = '?alt=json&callback=BloggerRelatedPosts.add'
+      const params = '?alt=json&callback=RelatedPosts.add'
                    + (data.params ? '&'+data.params : '');
-      const isMaxResults = data.params && data.params.indexOf('max-results=') >= 0;
+      const isMaxResults = /(^|&)max-results=/.test(data.params);
       if (data.limit == 0) {
         // ラベルなし時
         if (data.min <= data.pageMap.size) {
@@ -287,8 +277,8 @@
       if (data.useLastPosts === true) {
         loadScript(feed+params);
       }
-      // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json&callback=BloggerRelatedPosts.add
-      //     http://www.bugbugnow.net/feeds/posts/summary?alt=json&callback=BloggerRelatedPosts.add
+      // 例：https://www.bugbugnow.net/feeds/posts/summary/-/WSHLibrary?alt=json&callback=RelatedPosts.add
+      //     http://www.bugbugnow.net/feeds/posts/summary?alt=json&callback=RelatedPosts.add
       // 補足：homepageUrlは、プレビュー画面動作用です
       // 補足：ラベルの複数指定方法もある（.../-/label1/label2?...）
       //       ただし、AND検索である（現状使いみちが思いつかなかったため、使用しない）
@@ -342,7 +332,7 @@
 json          | 必須 | 初期値                     | 説明                         | 備考
 ---           | ---  | ---                        | ---                          | ---
 debug         | -    | false                      | デバッグ機能を有効にする
-enable        | -    | true                       | 機能が有効である
+run           | -    | true                       | 実行する
 pushPages     | -    | false                      | pagesを上位設定pagesの末尾に追加する
 pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
 homepageUrl   | -    | ""                         | ホームページのURL            | プレビュー画面用
