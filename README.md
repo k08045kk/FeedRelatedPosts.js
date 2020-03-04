@@ -1,4 +1,4 @@
-﻿BlogerRelatedPosts.js
+﻿FeedRelatedPosts.js
 =====================
 
 Place related articles on Blogger.
@@ -11,7 +11,7 @@ Related articles are created based on post titles, labels, and summaries. The re
 
 
 ## License
-[MIT](https://github.com/k08045kk/BloggerRelatedPosts.js/blob/master/LICENSE)
+[MIT](https://github.com/k08045kk/FeedRelatedPosts.js/blob/master/LICENSE)
 
 
 
