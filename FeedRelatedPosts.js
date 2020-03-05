@@ -35,6 +35,7 @@
  * @see         1.20200304 - update - 名称変更 BloggerRelatedPosts.js -> FeedRelatedPosts.js
  * @see         1.20200304 - update - excludedAnkerQuery追加
  * @see         1.20200305 - update - リファクタリング
+ * @see         1.20200305 - update - engramify()改善
  */
 (function(root, factory) {
   if (!root.FeedRelatedPosts) {
@@ -99,17 +100,19 @@
   // 英語（半角スペース区切り文字）を分割する
   // see https://www.bugbugnow.net/2020/02/English-simple-separation.html
   const engramify = function(text, set) {
-    text = text.toLowerCase();
     set = set || new Set();
-    //const re = /[A-Z]+[a-z]*|[A-Z]*[a-z]+|'[A-Z]*[a-z]*|[0-9]+|"|!|\?|-|:|;|,|\.|[^A-Za-z0-9'"!\?\-:;,\.\s]+/g;
-    const re = /[a-z]+|'[a-z]*|[0-9]+|[^a-z0-9'"!\?\-:;,\.\s]+/g;
+    const re = /[A-Z]+[a-z]*|[A-Z]*[a-z]+|'[A-Z]*[a-z]*|[0-9]+|[^A-Za-z0-9'"!\?\-:;,\.\s]+/g;
     let m;
     while ((m=re.exec(text)) !== null) {
-      set.add(m[0]);
+      if (m[0].charCodeAt(0) <= 0xFE) {
+        set.add(m[0].toLowerCase());
+      } else {
+        trigramify(m[0], set);
+      }
     }
     return set;
-    // engramify("It's a gift for Mr. 太郎. 太郎さんへのgiftです。");
-    // [ "it", "'s", "a", "gift", "for", "mr", "太郎", "太郎さんへの", "です。" ]
+    // engramify("It's a GiftCode for Mr. 太郎. 太郎のGIFTCodeです。");
+    // ["it", "'s", "a", "gift", "code", "for", "mr", "郎  ", "太郎 ", " 太郎", "  太", "の  ", "への ", "んへの", "さんへ", "郎さん", "giftcode", "。  ", "す。", "です。", " です", "  で"]
   };
   
   // 3文字づつに分解する
@@ -195,7 +198,7 @@
           let entry = json.feed.entry[i];
           for (let k=0; k<entry.link.length; k++) {
             if (entry.link[k].rel == 'alternate') {
-              if (data.url != entry.link[k].href && !data.pageMap.has(entry.link[k].href)) {
+              if (!data.pageMap.has(entry.link[k].href)) {
                 const set = data.gramify(entry.link[k].title);
                 if (data.useSummary === true && entry.summary && entry.summary.$t) {
                   data.gramify(entry.summary.$t, set);
@@ -240,6 +243,7 @@
     data.count = 0;
     data.limit = data.labels.length + (data.useLastPosts === true ? 1 : 0);
     data.pageMap = new Map();
+    data.pageMap.set(data.url, {score:-1});
     
     if (data.min == null) { data.min = 1; }
     if (data.max == null) { data.max = 5; }
@@ -318,7 +322,6 @@
 /*<!--
 // サイトの関連記事設定
 // 下記の<script>をBlogウィジェット内に設定してください。
-// ※JSONでコメントは使用不可です
 <script type='application/json' id='related-posts-site-json'>
 {
   "debug": false,
@@ -328,7 +331,6 @@
   "url": "<data:post.url/>",
   "title": "<data:post.title.jsonEscaped/>",
   "snippet": "<data:post.snippet.jsonEscaped/>",
-       // or "<data:post.snippets.short.jsonEscaped/>"  // widget version 1 or 2
   "useSnippet": true,
   "useSummary": false,
   "gramify": "trigramify",
