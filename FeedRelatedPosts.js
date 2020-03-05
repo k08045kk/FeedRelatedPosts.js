@@ -4,7 +4,7 @@
  * Bloggerに関連記事を設置します。
  * 関連記事は、投稿のタイトルとラベル、概要を元に作成します。
  * 関連記事の関連度は、タイトルと概要を元にした`trigram`や`engramify`の一致度で判定します。
- * README.mdに別記するサイトの関連記事設定、ページの関連記事設定を元に関連記事を配置します。
+ * サイト関連記事設定・ページ関連記事設定に基づいて配置されます。README.mdに別記します。
  * 設定は、[サイト設定]に[ページ設定]を上書きして利用します。
  * 本スクリプトの読込み（実行）は、関連記事設定より後に実行して下さい。
  * 使用方法として次の３つが考えられます。
@@ -274,7 +274,7 @@
     if (data.pageMap.size < data.max) {
       // 除外URLを設定
       if (data.excludedAnkerQuery) {
-        const ankers = document.querySelectorAll(data.excludedAnkerQuery);
+        const ankers = document.querySelectorAll(data.excludedAnkersQuery);
         for (let a=0; a<ankers.length; a++) {
           data.pageMap.set(ankers[a].href, {score:-1});
         }

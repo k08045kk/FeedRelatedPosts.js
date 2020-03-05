@@ -17,8 +17,8 @@ Bloggerに関連記事を設置します。
 
 
 ## Setting
-サイトの関連記事設定
-下記の`<script>`をBloggerのBlogウィジェット内に設定してください。
+サイトの関連記事設定  
+下記の`<script>`をBloggerのBlogウィジェット内に設定してください。  
 プロパティは、下記の表を参照して下さい。
 ```html
 <script type='application/json' id='related-posts-site-json'>
@@ -42,8 +42,8 @@ Bloggerに関連記事を設置します。
 
 ---
 
-ページの関連記事設定
-下記の`<script>`を投稿内に設定してください。
+ページの関連記事設定  
+下記の`<script>`を投稿内に設定してください。  
 ※ページ側で制御しない場合、設置は不要です。
 ```html
 <script type='application/json' id='related-posts-page-json'>
@@ -55,7 +55,7 @@ Bloggerに関連記事を設置します。
 </script>
 ```
 
-※`<script>`の記載が難しい場合、`<div hidden>`などで対応できないか検討ください。
+※`<script>`の記載が難しい場合、`<div hidden="1">`などで対応できないか検討ください。
 
 
 
@@ -71,16 +71,16 @@ pageJsonQuery | 備考参照     | ページ設定JSONのクエリー     | "#re
 homepageUrl   | ""           | ホームページのURL            | プレビュー画面用
 params        | ""           | feeds取得用の追加パラメータ
 useLastPosts  | false        | 最新投稿を対象にする
-labels        | - (必須)     | 設置投稿のラベル
-url           | - (必須)     | 設置投稿のURL
-title         | - (必須)     | 設置投稿のタイトル
+labels        | 必須         | 設置投稿のラベル
+url           | 必須         | 設置投稿のURL
+title         | 必須         | 設置投稿のタイトル
 snippet       | ""           | 設置投稿のスニペット
 useSnippet    | false        | snippetを使用する            | 関連度上昇目的
 useSummary    | false        | summaryを使用する            | 関連度上昇目的
-gramify       | "trigramify" | 文字列分割方式               | "trigramify"（日本語用）<br/>"engramify"（英語用）
+useSetType    | "trigramify" | 文字列分割方式               | "trigramify"（日本語用）<br/>"engramify"（英語用）
 min           | 1            | 関連記事の最小数             | 未満は表示しない<br/>-1:dummyでmaxまで表示
 max           | 5            | 関連記事の最大数             | 関連度上位表示する
-excludedAnkerQuery | -       | 除外アンカークエリー         | ページ内のリンクを除外する
+excludedAnkersQuery | -      | 除外アンカークエリー         | ページ内のリンクを除外する
 insertQuery   | 備考参照     | 関連記事HTMLの挿入位置       | "#related-posts-site-json"
 prefix        | ""           | 関連記事HTMLの接頭辞
 sufix         | ""           | 関連記事HTMLの接尾辞
@@ -88,8 +88,8 @@ dummy         | ""           | 関連記事HTMLのダミー         | 書式は�
 format        | ""           | 関連記事HTMLの書式
 pages         | []           | 事前指定の関連記事設定       | 配列先頭から表示する。<br/>maxを超えて表示しない。<br/>余りを関連度順で表示する。
 pages.visible | true         | 項目を表示する               | 未使用設定保存用
-pages.url     | - (必須)     | ページURL
-pages.title   | - (必須)     | ページタイトル
+pages.url     | 必須         | ページURL
+pages.title   | 必須         | ページタイトル
 pages.thumbnail | -          | ページサムネイル画像URL
 pages.score   | -            | 関連度                       | システム内部の変数
 
