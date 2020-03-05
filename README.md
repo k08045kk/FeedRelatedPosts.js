@@ -64,7 +64,7 @@ Bloggerに関連記事を設置します。
 ---           | ---  | ---                        | ---                          | ---
 debug         | -    | false                      | デバッグ機能を有効にする
 state         | -    | -                          | 状態                         | システム内部の変数
-run           | -    | true                       | 実行する                     | 読込み直後にRelatedPosts.init();を呼び出します
+run           | -    | true                       | 実行する                     | RelatedPosts.init();
 pushPages     | -    | false                      | pagesを上位設定pagesの末尾に追加する
 siteJsonQuery | -    | "#related-posts-site-json" | サイト設定JSONのクエリー
 pageJsonQuery | -    | "#related-posts-page-json" | ページ設定JSONのクエリー
@@ -77,18 +77,18 @@ title         | 必須 | -                          | 関連記事の設置投�
 snippet       | -    | ""                         | 関連記事の設置投稿のスニペット
 useSnippet    | -    | false                      | snippetを使用する            | 関連度上昇目的
 useSummary    | -    | false                      | summaryを使用する            | 関連度上昇目的
-gramify       | -    | "trigramify"               | 文字列分割方式               | "trigramify"（3文字分割：日本語用）, "engramify"（英単語分割：英語用）が指定可能
-min           | -    | 1                          | 関連記事の最小数             | 未満は表示しない（-1:dummyを使用してmaxまで表示）
+gramify       | -    | "trigramify"               | 文字列分割方式               | "trigramify"（日本語用）<br/>"engramify"（英語用）
+min           | -    | 1                          | 関連記事の最小数             | 未満は表示しない<br/>（-1:dummyでmaxまで表示）
 max           | -    | 5                          | 関連記事の最大数             | 関連度上位表示する
 excludedAnkerQuery | - | -                        | 除外アンカークエリー         | ページ内のリンクを除外する
 insertQuery   | -    | "#related-posts-site-json" | 関連記事HTMLの挿入位置のクエリー
 prefix        | -    | ""                         | 関連記事HTMLの接頭辞
 sufix         | -    | ""                         | 関連記事HTMLの接尾辞
 dummy         | -    | ""                         | 関連記事HTMLのダミー         | 書式は使用できない
-format        | -    | ""                         | 関連記事HTMLの書式           | ${url}, ${title}, ${thumbnail}, ${score}, ${$} が使用できる
-pages         | -    | []                         | 事前指定の関連記事設定       | 配列先頭から順に表示する。最大数（max）を超えて表示しない。設定数が最大数に満たない場合、余りを関連度順で表示する。
+format        | -    | ""                         | 関連記事HTMLの書式
+pages         | -    | []                         | 事前指定の関連記事設定       | 配列先頭から順に表示する。<br/>最大数（max）を超えて表示しない。<br/>余りを関連度順で表示する。
 pages.visible | -    | true                       | 項目を表示する               | 未使用設定保存用
-pages.url     | 必須 | -                          | ページURL                    | 関連記事に同一URLを表示しないが、http・https混在環境では重複する可能性がある
+pages.url     | 必須 | -                          | ページURL
 pages.title   | 必須 | -                          | ページタイトル
 pages.thumbnail | -  | -                          | ページサムネイル画像URL
 pages.score   | 不可 | -                          | 関連度                       | システム内部の変数
