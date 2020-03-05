@@ -60,38 +60,38 @@ Bloggerに関連記事を設置します。
 
 
 ## Properties
-プロパティ    | 初期値                     | 説明                         | 備考
----           | ---                        | ---                          | ---
-debug         | false                      | デバッグ機能を有効にする
-state         | -                          | 状態                         | システム内部の変数
-run           | true                       | 実行する                     | RelatedPosts.init();
-pushPages     | false                      | pagesを上位設定pagesの末尾に追加する
-siteJsonQuery | "#related-posts-site-json" | サイト設定JSONのクエリー
-pageJsonQuery | "#related-posts-page-json" | ページ設定JSONのクエリー
-homepageUrl   | ""                         | ホームページのURL            | プレビュー画面用
-params        | ""                         | feeds取得用の追加パラメータ
-useLastPosts  | false                      | 最新投稿を関連記事の対象にする
-labels        | - (必須)                   | 関連記事の設置投稿のラベル
-url           | - (必須)                   | 関連記事の設置投稿のURL
-title         | - (必須)                   | 関連記事の設置投稿のタイトル
-snippet       | ""                         | 関連記事の設置投稿のスニペット
-useSnippet    | false                      | snippetを使用する            | 関連度上昇目的
-useSummary    | false                      | summaryを使用する            | 関連度上昇目的
-gramify       | "trigramify"               | 文字列分割方式               | "trigramify"（日本語用）<br/>"engramify"（英語用）
-min           | 1                          | 関連記事の最小数             | 未満は表示しない<br/>-1:dummyでmaxまで表示
-max           | 5                          | 関連記事の最大数             | 関連度上位表示する
-excludedAnkerQuery | -                     | 除外アンカークエリー         | ページ内のリンクを除外する
-insertQuery   | "#related-posts-site-json" | 関連記事HTMLの挿入位置のクエリー
-prefix        | ""                         | 関連記事HTMLの接頭辞
-sufix         | ""                         | 関連記事HTMLの接尾辞
-dummy         | ""                         | 関連記事HTMLのダミー         | 書式は使用できない
-format        | ""                         | 関連記事HTMLの書式
-pages         | []                         | 事前指定の関連記事設定       | 配列先頭から表示する。<br/>maxを超えて表示しない。<br/>余りを関連度順で表示する。
-pages.visible | true                       | 項目を表示する               | 未使用設定保存用
-pages.url     | - (必須)                   | ページURL
-pages.title   | - (必須)                   | ページタイトル
-pages.thumbnail | -                        | ページサムネイル画像URL
-pages.score   | -                          | 関連度                       | システム内部の変数
+プロパティ    | 初期値       | 説明                         | 備考
+---           | ---          | ---                          | ---
+debug         | false        | デバッグ機能を有効にする
+state         | -            | 状態                         | システム内部の変数
+run           | true         | 実行する                     | RelatedPosts.init();
+pushPages     | false        | 上位設定の末尾に追加する
+siteJsonQuery | 備考参照     | サイト設定JSONのクエリー     | "#related-posts-site-json"
+pageJsonQuery | 備考参照     | ページ設定JSONのクエリー     | "#related-posts-page-json"
+homepageUrl   | ""           | ホームページのURL            | プレビュー画面用
+params        | ""           | feeds取得用の追加パラメータ
+useLastPosts  | false        | 最新投稿を対象にする
+labels        | - (必須)     | 設置投稿のラベル
+url           | - (必須)     | 設置投稿のURL
+title         | - (必須)     | 設置投稿のタイトル
+snippet       | ""           | 設置投稿のスニペット
+useSnippet    | false        | snippetを使用する            | 関連度上昇目的
+useSummary    | false        | summaryを使用する            | 関連度上昇目的
+gramify       | "trigramify" | 文字列分割方式               | "trigramify"（日本語用）<br/>"engramify"（英語用）
+min           | 1            | 関連記事の最小数             | 未満は表示しない<br/>-1:dummyでmaxまで表示
+max           | 5            | 関連記事の最大数             | 関連度上位表示する
+excludedAnkerQuery | -       | 除外アンカークエリー         | ページ内のリンクを除外する
+insertQuery   | 備考参照     | 関連記事HTMLの挿入位置       | "#related-posts-site-json"
+prefix        | ""           | 関連記事HTMLの接頭辞
+sufix         | ""           | 関連記事HTMLの接尾辞
+dummy         | ""           | 関連記事HTMLのダミー         | 書式は使用できない
+format        | ""           | 関連記事HTMLの書式
+pages         | []           | 事前指定の関連記事設定       | 配列先頭から表示する。<br/>maxを超えて表示しない。<br/>余りを関連度順で表示する。
+pages.visible | true         | 項目を表示する               | 未使用設定保存用
+pages.url     | - (必須)     | ページURL
+pages.title   | - (必須)     | ページタイトル
+pages.thumbnail | -          | ページサムネイル画像URL
+pages.score   | -            | 関連度                       | システム内部の変数
 
 
 
