@@ -203,6 +203,11 @@
                 if (data.useSummary === true && entry.summary && entry.summary.$t) {
                   data.gramify(entry.summary.$t, set);
                 }
+                let score = relevance(data.set, set);
+                if (data.onlyThumbnail === true 
+                && !(entry.media$thumbnail && entry.media$thumbnail.url)) {
+                  score = -1;
+                }
                 data.pageMap.set(entry.link[k].href.split('?')[0], {
                   url: entry.link[k].href,
                   title: entry.link[k].title, 
@@ -211,7 +216,7 @@
                   //summary: (entry.summary ? entry.summary.$t : ''),
                   //set: set,
                   thumbnail: (entry.media$thumbnail ? entry.media$thumbnail.url : ''),
-                  score: relevance(data.set, set)
+                  score: score
                 });
               }
               break;
@@ -239,7 +244,10 @@
     }
     
     data.state = 'init';
-    data.url = data.url.split('?')[0];
+    data.url = data.url || location.href;
+    data.title = data.title || document.title;
+    data.labels = data.labels || [];
+    data.url = data.url.split(/\?|#/)[0];
     data.count = 0;
     data.limit = data.labels.length + (data.useLastPosts === true ? 1 : 0);
     data.pageMap = new Map();

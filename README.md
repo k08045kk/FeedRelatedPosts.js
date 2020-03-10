@@ -71,10 +71,11 @@ pageJsonQuery | 備考参照     | ページ設定JSONのクエリー     | "#re
 homepageUrl   | ""           | ホームページのURL            | プレビュー画面用
 params        | ""           | feeds取得用の追加パラメータ
 useLastPosts  | false        | 最新投稿を対象にする
-labels        | 必須         | 設置投稿のラベル
-url           | 必須         | 設置投稿のURL
-title         | 必須         | 設置投稿のタイトル
+labels        | []           | 設置投稿のラベル
+url           | location.href  | 設置投稿のURL
+title         | document.title | 設置投稿のタイトル
 snippet       | ""           | 設置投稿のスニペット
+onlyThumbnail | false        | サムネイルあり限定
 useSnippet    | false        | snippetを使用する            | 関連度上昇目的
 useSummary    | false        | summaryを使用する            | 関連度上昇目的
 useSetType    | "trigramify" | 文字列分割方式               | "trigramify"（日本語用）<br/>"engramify"（英語用）
