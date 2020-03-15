@@ -1,4 +1,4 @@
-/*! FeedRelatedPosts.js v1 | MIT License | https://github.com/k08045kk/FeedRelatedPosts.js/blob/master/LICENSE */
+/*! FeedRelatedPosts.js v2.0 | MIT License | https://github.com/k08045kk/FeedRelatedPosts.js/blob/master/LICENSE */
 /**
  * FeedRelatedPosts.js
  * Bloggerに関連記事を設置します。
@@ -15,27 +15,9 @@
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * 補足：フィード読込みとフィード解析の変更で、Blogger以外にも対応も可能です。
  * @auther      toshi (https://github.com/k08045kk)
- * @version     1
+ * @version     2.0
  * @see         1.20200211 - add - 初版
- * @see         1.20200212 - update - engramify（英語分割）に対応
- * @see         1.20200213 - update - insertPositionId を Query に変更、自由度向上のため
- * @see         1.20200213 - update - htmlscd(), engramify() を最適化
- * @see         1.20200213 - update - 関連記事設定の構造を変更
- * @see         1.20200213 - update - ${score}, ${$} を出力
- * @see         1.20200213 - fix - 事前指定時にm=1のURLと重複することがある
- * @see         1.20200216 - update - pushPages, insertQueryに修正
- * @see         1.20200216 - update - enableを追加
- * @see         1.20200216 - fix - m=1ページでJSONロードに失敗する
- * @see         1.20200220 - update - dummy指定を追加
- * @see         1.20200221 - update - リファクタリング
- * @see         1.20200221 - update - 関連度が等しい場合、更新日が新しいものを優先する
- * @see         1.20200222 - fix - 事前指定が優先されないことがある
- * @see         1.20200222 - update - 最新投稿を使用可能とする
- * @see         1.20200304 - update - データ格納方式変更（グローバル変数からの入力を有効化）
- * @see         1.20200304 - update - 名称変更 BloggerRelatedPosts.js -> FeedRelatedPosts.js
- * @see         1.20200304 - update - excludedAnkerQuery追加
- * @see         1.20200305 - update - リファクタリング
- * @see         1.20200305 - update - engramify()改善
+ * @see         2.0.20200315 - update - v2.0
  */
 (function(root, factory) {
   if (!root.FeedRelatedPosts) {
