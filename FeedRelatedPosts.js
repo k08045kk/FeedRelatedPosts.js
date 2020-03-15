@@ -98,6 +98,7 @@
   };
   
   // 3文字づつに分解する
+  // see https://www.bugbugnow.net/2020/02/Measure-string-similarity-with-ngram.html
   const trigramify = function(text, set) {
     text = '  '+text.toLowerCase()+'  ';
     set = set || new Set();
