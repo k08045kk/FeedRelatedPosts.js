@@ -1,4 +1,4 @@
-/*! FeedRelatedPosts.js v2.0 | MIT License | https://github.com/k08045kk/FeedRelatedPosts.js/blob/master/LICENSE */
+/*! FeedRelatedPosts.js v2.1 | MIT License | https://github.com/k08045kk/FeedRelatedPosts.js/blob/master/LICENSE */
 /**
  * FeedRelatedPosts.js
  * Bloggerに関連記事を設置します。
@@ -15,15 +15,17 @@
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * 補足：フィード読込みとフィード解析の変更で、Blogger以外にも対応も可能です。
  * @auther      toshi (https://github.com/k08045kk)
- * @version     2.0
- * @see         1.20200211 - add - 初版
- * @see         2.0.20200315 - update - v2.0
+ * @version     2.1
+ * @see         1.0.20200211 - 初版
+ * @see         2.0.20200315 - v2.0
+ * @see         2.1.20210209 - pushLabelsを追加
  */
 (function(root, factory) {
   if (!root.FeedRelatedPosts) {
     // 設定作成
     const obj = window.FeedRelatedPosts || function() {};
     const pages = (obj.pages = obj.pages || []);
+    const labels = (obj.labels = obj.labels || []);
     for (let i=0; i<2; i++) {
       const query = i == 0 
                   ? (obj.siteJsonQuery || '#related-posts-site-json') 
@@ -32,6 +34,7 @@
       try {
         const data = element && JSON.parse(element.textContent) || {};
         Array.prototype.push.apply(pages, data.pages || []);
+        Array.prototype.push.apply(labels, data.labels || []);
         for (const key in data) {
           if (data.hasOwnProperty(key)) {
             obj[key] = data[key];
@@ -40,6 +43,7 @@
       } catch (e) {}
     }
     obj.pages = obj.pushPages === true ? pages : obj.pages;
+    obj.labels = obj.pushLabels === true ? labels : obj.labels;
     
     // 作成と実行
     root.FeedRelatedPosts = factory(obj, document);

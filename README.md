@@ -66,6 +66,7 @@ debug         | false        | デバッグ機能を有効にする
 state         | -            | 状態                         | システム内部の変数
 run           | true         | 実行する                     | RelatedPosts.init();
 pushPages     | false        | 上位設定の末尾に追加する
+pushLabels    | false        | 上位設定の末尾に追加する
 siteJsonQuery | 備考参照     | サイト設定JSONのクエリー     | "#related-posts-site-json"
 pageJsonQuery | 備考参照     | ページ設定JSONのクエリー     | "#related-posts-page-json"
 homepageUrl   | ""           | ホームページのURL            | プレビュー画面用
