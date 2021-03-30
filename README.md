@@ -32,7 +32,7 @@ Bloggerに関連記事を設置します。
   "useSnippet": true,
   "min": -1,
   "max": 5,
-  "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>",
+  "prefix": "<div><h2>Related Posts</h2><ul>",
   "sufix": "</ul></div>",
   "dummy": "<li>&amp;nbsp;</li>",
   "format": "<li data-score='${score}'><a href='${url}'>${title}</a></li>", 
