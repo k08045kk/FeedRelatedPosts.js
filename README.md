@@ -84,6 +84,7 @@ min           | 1            | 関連記事の最小数             | 未満は�
 max           | 5            | 関連記事の最大数             | 関連度上位表示する
 excludedAnkersQuery | -      | 除外アンカークエリー         | ページ内のリンクを除外する
 insertQuery   | 備考参照     | 関連記事HTMLの挿入位置       | "#related-posts-site-json"
+insertAdjacent| 備考参照     | 関連記事HTMLの挿入位置       | "afterend"
 prefix        | ""           | 関連記事HTMLの接頭辞
 sufix         | ""           | 関連記事HTMLの接尾辞
 dummy         | ""           | 関連記事HTMLのダミー         | 書式は使用できない
