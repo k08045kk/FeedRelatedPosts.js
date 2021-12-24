@@ -70,7 +70,7 @@ pushLabels    | false        | 上位設定の末尾に追加する
 siteJsonQuery | 備考参照     | サイト設定JSONのクエリー     | "#related-posts-site-json"
 pageJsonQuery | 備考参照     | ページ設定JSONのクエリー     | "#related-posts-page-json"
 homepageUrl   | ""           | ホームページのURL            | プレビュー画面用
-params        | ""           | feeds取得用の追加パラメータ
+params        | ""           | feeds取得用の追加パラメータ  | "orderby=updated"
 useLastPosts  | false        | 最新投稿を対象にする
 labels        | []           | 設置投稿のラベル
 url           | location.href  | 設置投稿のURL
