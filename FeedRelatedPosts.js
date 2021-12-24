@@ -15,11 +15,12 @@
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * 補足：フィード読込みとフィード解析の変更で、Blogger以外にも対応も可能です。
  * @auther      toshi (https://github.com/k08045kk)
- * @version     2.2
+ * @version     2.3
  * @since       1.0.20200211 - 初版
  * @since       2.0.20200315 - v2.0
  * @since       2.1.20210209 - pushLabelsを追加
  * @since       2.2.20210407 - insertAdjacentを追加
+ * @since       2.3.20211224 - fix excludedAnkersQuery が excludedAnkerQuery を設定しないと動作しない
  */
 (function(root, factory) {
   if (!root.FeedRelatedPosts) {
@@ -270,7 +271,7 @@
     
     if (data.pageMap.size < data.max) {
       // 除外URLを設定
-      if (data.excludedAnkerQuery) {
+      if (data.excludedAnkersQuery) {
         const ankers = document.querySelectorAll(data.excludedAnkersQuery);
         for (let a=0; a<ankers.length; a++) {
           data.pageMap.set(ankers[a].href, {score:-1});
