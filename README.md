@@ -32,7 +32,7 @@ Bloggerに関連記事を設置します。
   "useSnippet": true,
   "min": -1,
   "max": 5,
-  "prefix": "<div role='navigation'><h2>Related Posts</h2><ul>",
+  "prefix": "<div><h2>Related Posts</h2><ul>",
   "sufix": "</ul></div>",
   "dummy": "<li>&amp;nbsp;</li>",
   "format": "<li data-score='${score}'><a href='${url}'>${title}</a></li>", 
@@ -66,6 +66,7 @@ debug         | false        | デバッグ機能を有効にする
 state         | -            | 状態                         | システム内部の変数
 run           | true         | 実行する                     | RelatedPosts.init();
 pushPages     | false        | 上位設定の末尾に追加する
+pushLabels    | false        | 上位設定の末尾に追加する
 siteJsonQuery | 備考参照     | サイト設定JSONのクエリー     | "#related-posts-site-json"
 pageJsonQuery | 備考参照     | ページ設定JSONのクエリー     | "#related-posts-page-json"
 homepageUrl   | ""           | ホームページのURL            | プレビュー画面用
@@ -83,6 +84,7 @@ min           | 1            | 関連記事の最小数             | 未満は�
 max           | 5            | 関連記事の最大数             | 関連度上位表示する
 excludedAnkersQuery | -      | 除外アンカークエリー         | ページ内のリンクを除外する
 insertQuery   | 備考参照     | 関連記事HTMLの挿入位置       | "#related-posts-site-json"
+insertAdjacent| 備考参照     | 関連記事HTMLの挿入位置       | "afterend"
 prefix        | ""           | 関連記事HTMLの接頭辞
 sufix         | ""           | 関連記事HTMLの接尾辞
 dummy         | ""           | 関連記事HTMLのダミー         | 書式は使用できない

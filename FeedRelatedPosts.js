@@ -1,4 +1,4 @@
-/*! FeedRelatedPosts.js v2.0 | MIT License | https://github.com/k08045kk/FeedRelatedPosts.js/blob/master/LICENSE */
+/*! FeedRelatedPosts.js v2.2 | MIT License | https://github.com/k08045kk/FeedRelatedPosts.js/blob/master/LICENSE */
 /**
  * FeedRelatedPosts.js
  * Bloggerに関連記事を設置します。
@@ -15,15 +15,19 @@
  * 関連：https://www.bugbugnow.net/2018/07/blogger_23.html
  * 補足：フィード読込みとフィード解析の変更で、Blogger以外にも対応も可能です。
  * @auther      toshi (https://github.com/k08045kk)
- * @version     2.0
- * @see         1.20200211 - add - 初版
- * @see         2.0.20200315 - update - v2.0
+ * @version     2.3
+ * @since       1.0.20200211 - 初版
+ * @since       2.0.20200315 - v2.0
+ * @since       2.1.20210209 - pushLabelsを追加
+ * @since       2.2.20210407 - insertAdjacentを追加
+ * @since       2.3.20211224 - fix excludedAnkersQuery が excludedAnkerQuery を設定しないと動作しない
  */
 (function(root, factory) {
   if (!root.FeedRelatedPosts) {
     // 設定作成
-    const obj = window.FeedRelatedPosts || function() {};
+    const obj = root.FeedRelatedPosts || function() {};
     const pages = (obj.pages = obj.pages || []);
+    const labels = (obj.labels = obj.labels || []);
     for (let i=0; i<2; i++) {
       const query = i == 0 
                   ? (obj.siteJsonQuery || '#related-posts-site-json') 
@@ -32,6 +36,7 @@
       try {
         const data = element && JSON.parse(element.textContent) || {};
         Array.prototype.push.apply(pages, data.pages || []);
+        Array.prototype.push.apply(labels, data.labels || []);
         for (const key in data) {
           if (data.hasOwnProperty(key)) {
             obj[key] = data[key];
@@ -40,6 +45,7 @@
       } catch (e) {}
     }
     obj.pages = obj.pushPages === true ? pages : obj.pages;
+    obj.labels = obj.pushLabels === true ? labels : obj.labels;
     
     // 作成と実行
     root.FeedRelatedPosts = factory(obj, document);
@@ -98,6 +104,7 @@
   };
   
   // 3文字づつに分解する
+  // see https://www.bugbugnow.net/2020/02/Measure-string-similarity-with-ngram.html
   const trigramify = function(text, set) {
     text = '  '+text.toLowerCase()+'  ';
     set = set || new Set();
@@ -160,7 +167,8 @@
       
       // 指定要素の直後に挿入
       const query = data.insertQuery || '#related-posts-site-json';
-      document.querySelector(query).insertAdjacentHTML('afterend', html);
+      const insert = data.insertAdjacent || 'afterend';
+      document.querySelector(query).insertAdjacentHTML(insert, html);
     }
     
     if (data.debug !== true) {
@@ -263,7 +271,7 @@
     
     if (data.pageMap.size < data.max) {
       // 除外URLを設定
-      if (data.excludedAnkerQuery) {
+      if (data.excludedAnkersQuery) {
         const ankers = document.querySelectorAll(data.excludedAnkersQuery);
         for (let a=0; a<ankers.length; a++) {
           data.pageMap.set(ankers[a].href, {score:-1});
